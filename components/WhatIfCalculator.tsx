@@ -233,6 +233,21 @@ export default function WhatIfCalculator() {
             mode="whatif"
           />
 
+          {/* Ston.fi CTA */}
+          <a
+            href="https://app.ston.fi/swap?ft=TON&tt=EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
+            style={{
+              background: "linear-gradient(135deg, rgba(0,152,234,0.15), rgba(0,152,234,0.05))",
+              border: "1px solid rgba(0,152,234,0.3)",
+              color: "#0098EA",
+            }}
+          >
+            ⚡ Swap TON → tsTON on Ston.fi →
+          </a>
+
           {/* Share button */}
           <button
             onClick={handleShare}
