@@ -318,33 +318,37 @@ export default function FutureROICalculator() {
 
           {/* Table */}
           <div className="rounded-2xl overflow-hidden" style={glass}>
-            <div className="grid grid-cols-4 sm:grid-cols-5 px-4 sm:px-5 py-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <span>Period</span>
-              <span className="text-right">Initial</span>
-              <span className="text-right hidden sm:block">Earned (TON)</span>
-              <span className="text-right">Earned (USDT)</span>
-              <span className="text-right">Total</span>
-            </div>
-            {forecastRows.map((row, i) => {
-              const color = PERIOD_OPTIONS.find((p) => p.months === row.months)?.color ?? "#fff";
-              return (
-                <div
-                  key={row.months}
-                  className="grid grid-cols-4 sm:grid-cols-5 px-4 sm:px-5 py-4 text-xs sm:text-sm"
-                  style={i < forecastRows.length - 1 ? { borderBottom: "1px solid rgba(255,255,255,0.05)" } : {}}
-                >
-                  <span className="font-medium" style={{ color }}>{row.label}</span>
-                  <span className="text-right" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    ${fmt2(row.initial)}
-                  </span>
-                  <span className="text-right text-white hidden sm:block">+{row.earnedTON.toFixed(2)}</span>
-                  <span className="text-right" style={{ color: "#22C55E" }}>
-                    +${fmt2(row.earnedUSDT)}
-                  </span>
-                  <span className="text-right font-bold text-white">${fmt2(row.total)}</span>
+            <div className="overflow-x-auto">
+              <div className="min-w-full">
+                <div className="grid grid-cols-3 sm:grid-cols-5 px-4 sm:px-5 py-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <span>Period</span>
+                  <span className="text-right hidden sm:block">Initial</span>
+                  <span className="text-right hidden sm:block">Earned (TON)</span>
+                  <span className="text-right">Earned (USDT)</span>
+                  <span className="text-right">Total</span>
                 </div>
-              );
-            })}
+                {forecastRows.map((row, i) => {
+                  const color = PERIOD_OPTIONS.find((p) => p.months === row.months)?.color ?? "#fff";
+                  return (
+                    <div
+                      key={row.months}
+                      className="grid grid-cols-3 sm:grid-cols-5 px-4 sm:px-5 py-4"
+                      style={i < forecastRows.length - 1 ? { borderBottom: "1px solid rgba(255,255,255,0.05)" } : {}}
+                    >
+                      <span className="text-xs sm:text-sm font-semibold" style={{ color }}>{row.label}</span>
+                      <span className="text-right text-xs sm:text-sm hidden sm:block" style={{ color: "rgba(255,255,255,0.45)" }}>
+                        ${fmt2(row.initial)}
+                      </span>
+                      <span className="text-right text-xs sm:text-sm text-white hidden sm:block">+{row.earnedTON.toFixed(2)}</span>
+                      <span className="text-right text-xs sm:text-sm" style={{ color: "#22C55E" }}>
+                        +${fmt2(row.earnedUSDT)}
+                      </span>
+                      <span className="text-right text-xs sm:text-sm font-bold text-white">${fmt2(row.total)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Ston.fi CTA */}
