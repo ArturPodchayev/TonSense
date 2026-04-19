@@ -82,7 +82,7 @@ export default function FutureROICalculator() {
 
   useEffect(() => {
     if (walletBalance && !amount) {
-      setAmount(walletBalance.toString());
+      setAmount(String(walletBalance).replace(",", "."));
     }
   }, [walletBalance]);
 

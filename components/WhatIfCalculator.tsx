@@ -58,7 +58,7 @@ export default function WhatIfCalculator() {
 
   useEffect(() => {
     if (walletBalance && !amount) {
-      setAmount(walletBalance.toString());
+      setAmount(String(walletBalance).replace(",", "."));
     }
   }, [walletBalance]);
 
