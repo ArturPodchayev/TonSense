@@ -14,46 +14,41 @@ export default function Home() {
       <div className="max-w-2xl w-full mx-auto px-3 sm:px-4 py-12">
 
         {/* Header */}
-        <div className="relative mb-8 text-center">
-          {/* Desktop wallet button */}
-          <div className="hidden md:block absolute right-0 top-0">
-            <WalletButton />
-          </div>
-          {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <img src="/logo.png" alt="TonSense" className="w-10 h-10 object-contain" />
-            <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">
-              Ton<span className="text-[#0098EA]">Sense</span>
-            </span>
-          </div>
-
-          {/* AI badge */}
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-              style={{
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                background: "rgba(0,152,234,0.15)",
-                border: "1px solid rgba(0,152,234,0.3)",
-                color: "rgba(255,255,255,0.7)",
-              }}
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-[#0098EA] animate-pulse"
-                style={{ boxShadow: "0 0 6px rgba(0,152,234,0.8)" }}
-              />
-              Powered by AI • Live Data
+        <div className="mb-8">
+          {/* Top row: logo left, wallet right */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="TonSense" className="w-9 h-9 object-contain" />
+              <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                Ton<span className="text-[#0098EA]">Sense</span>
+              </span>
             </div>
+            <WalletButton />
           </div>
 
-          <p className="text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
-            See what you missed. Plan what&apos;s next.
-          </p>
-
-          {/* Mobile wallet button */}
-          <div className="md:hidden mt-4 flex justify-center">
-            <WalletButton />
+          {/* Center: badge + tagline */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+                style={{
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                  background: "rgba(0,152,234,0.15)",
+                  border: "1px solid rgba(0,152,234,0.3)",
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-[#0098EA] animate-pulse"
+                  style={{ boxShadow: "0 0 6px rgba(0,152,234,0.8)" }}
+                />
+                Powered by AI • Live Data
+              </div>
+            </div>
+            <p className="text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
+              See what you missed. Plan what&apos;s next.
+            </p>
           </div>
         </div>
 

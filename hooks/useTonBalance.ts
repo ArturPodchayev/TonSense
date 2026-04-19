@@ -16,7 +16,7 @@ export function useTonBalance() {
       .then((r) => r.json())
       .then((data) => {
         if (data.balance) {
-          const ton = parseFloat((parseInt(data.balance) / 1e9).toFixed(2));
+          const ton = Math.floor(parseInt(data.balance) / 1e9 * 100) / 100;
           setBalance(ton);
         }
       })

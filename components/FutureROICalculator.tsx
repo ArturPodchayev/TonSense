@@ -156,9 +156,15 @@ export default function FutureROICalculator() {
           {walletBalance && (
             <button
               onClick={() => setAmount(walletBalance.toString())}
-              className="text-xs text-[#0098EA] hover:underline mt-1"
+              className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg transition-all"
+              style={{
+                background: "rgba(0,152,234,0.1)",
+                border: "1px solid rgba(0,152,234,0.2)",
+                color: "#0098EA",
+              }}
             >
-              💎 Use wallet balance: {walletBalance} TON
+              <span>💎</span>
+              <span>Use wallet balance: <strong>{walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</strong></span>
             </button>
           )}
         </div>
