@@ -216,7 +216,7 @@ export default function WhatIfCalculator() {
       {/* Results */}
       {results && (
         <div className="space-y-4">
-          <p className="text-lg sm:text-2xl font-bold text-white px-1">
+          <p className="text-base sm:text-xl font-bold text-white px-1">
             If you had staked{" "}
             <span
               style={{
@@ -232,7 +232,7 @@ export default function WhatIfCalculator() {
           </p>
 
           {/* Stat cards */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
             <ResultCard label="Just Held" value={`$${fmt2(results.heldUSDT)}`} />
             <ResultCard
               label="Staked in tsTON"
@@ -410,13 +410,13 @@ function ResultCard({
 
   return (
     <div
-      className="rounded-2xl p-3 sm:p-4 min-w-0 overflow-hidden"
+      className="rounded-2xl p-2.5 sm:p-4 min-w-0 overflow-hidden"
       style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", background: s.background, border: s.border, boxShadow: s.boxShadow }}
     >
-      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+      <p className="text-[9px] sm:text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>
         {icons[label] ? `${icons[label]} ` : ""}{label}
       </p>
-      <p className="text-lg sm:text-2xl font-black whitespace-nowrap leading-tight" style={{ color: s.color }}>
+      <p className="text-base sm:text-2xl font-black whitespace-nowrap leading-tight" style={{ color: s.color }}>
         {value}
       </p>
     </div>

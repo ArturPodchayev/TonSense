@@ -11,7 +11,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#080810]">
-      <div className="max-w-2xl w-full mx-auto px-3 sm:px-4 py-12">
+      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-10">
 
         {/* Header */}
         <div className="mb-8">
@@ -71,7 +71,7 @@ export default function Home() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="flex-1 py-2 sm:py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                className="flex-1 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200"
                 style={
                   active
                     ? {
