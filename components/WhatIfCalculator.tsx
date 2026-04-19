@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { fetchTonHistory, fetchStakingAPY, fetchTonPrice, type HistoryPoint } from "@/lib/api";
+import { useTonBalance } from "@/hooks/useTonBalance";
 import AIAnalysis from "@/components/AIAnalysis";
 import ShareCard from "@/components/ShareCard";
 import Toast from "@/components/Toast";
@@ -44,6 +45,7 @@ const fmt2 = (n: number) =>
 export default function WhatIfCalculator() {
   const [amount, setAmount] = useState<string>("");
   const [period, setPeriod] = useState<number>(30);
+  const walletBalance = useTonBalance();
   const [results, setResults] = useState<Results | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [apy, setApy] = useState<number>(4.2);
@@ -53,6 +55,12 @@ export default function WhatIfCalculator() {
   const [sharing, setSharing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (walletBalance && !amount) {
+      setAmount(walletBalance.toString());
+    }
+  }, [walletBalance]);
 
   useEffect(() => {
     Promise.all([fetchTonHistory(90), fetchStakingAPY(), fetchTonPrice()]).then(
@@ -141,6 +149,14 @@ export default function WhatIfCalculator() {
             onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,152,234,0.35)")}
             onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
+          {walletBalance && (
+            <button
+              onClick={() => setAmount(walletBalance.toString())}
+              className="text-xs text-[#0098EA] hover:underline mt-1"
+            >
+              💎 Use wallet balance: {walletBalance} TON
+            </button>
+          )}
         </div>
 
         <div>

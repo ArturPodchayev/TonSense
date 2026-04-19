@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { fetchStakingAPY, fetchTonPrice } from "@/lib/api";
+import { useTonBalance } from "@/hooks/useTonBalance";
 import AIAnalysis from "@/components/AIAnalysis";
 
 const PERIOD_OPTIONS = [
@@ -72,11 +73,18 @@ const fmt2 = (n: number) =>
 export default function FutureROICalculator() {
   const [amount, setAmount] = useState<string>("");
   const [selectedPeriods, setSelectedPeriods] = useState<number[]>([1, 3, 12]);
+  const walletBalance = useTonBalance();
   const [showResults, setShowResults] = useState(false);
   const [apy, setApy] = useState<number>(4.2);
   const [currentPrice, setCurrentPrice] = useState<number>(1.33);
   const [change24h, setChange24h] = useState<number>(0);
   const [inTON, setInTON] = useState(false);
+
+  useEffect(() => {
+    if (walletBalance && !amount) {
+      setAmount(walletBalance.toString());
+    }
+  }, [walletBalance]);
 
   useEffect(() => {
     Promise.all([fetchStakingAPY(), fetchTonPrice()]).then(([apyVal, priceData]) => {
@@ -145,6 +153,14 @@ export default function FutureROICalculator() {
             onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,152,234,0.35)")}
             onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
+          {walletBalance && (
+            <button
+              onClick={() => setAmount(walletBalance.toString())}
+              className="text-xs text-[#0098EA] hover:underline mt-1"
+            >
+              💎 Use wallet balance: {walletBalance} TON
+            </button>
+          )}
         </div>
 
         <div>
