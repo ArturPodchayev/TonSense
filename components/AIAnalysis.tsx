@@ -75,7 +75,7 @@ export default function AIAnalysis({ tonPrice, change24h, apy, userAmount, mode 
             color: "rgba(255,255,255,0.45)",
           }}
         >
-          Powered by DeepSeek
+          Powered by TonSenseAI
         </span>
       </div>
 

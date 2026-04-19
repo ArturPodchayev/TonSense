@@ -43,7 +43,7 @@ export default function Home() {
                   className="w-1.5 h-1.5 rounded-full bg-[#0098EA] animate-pulse"
                   style={{ boxShadow: "0 0 6px rgba(0,152,234,0.8)" }}
                 />
-                Powered by AI • Live Data
+                Powered by TonSenseAI
               </div>
             </div>
             <p className="text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
