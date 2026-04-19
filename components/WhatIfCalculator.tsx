@@ -235,7 +235,7 @@ export default function WhatIfCalculator() {
 
           {/* Ston.fi CTA */}
           <a
-            href="https://app.ston.fi/swap?ft=TON&tt=EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav"
+            href="https://t.me/stonfiFAQbot/trade?startapp=swap-TON-EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
