@@ -376,7 +376,7 @@ export default function FutureROICalculator() {
           {/* Action buttons */}
           <div className="flex gap-2">
             <a
-              href={`https://app.ston.fi/swap?ft=TON&tt=USDT&fa=${ton}`}
+              href="https://t.me/STONfi_bot"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
