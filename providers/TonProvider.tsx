@@ -4,7 +4,7 @@ import { TonConnectUIProvider } from "@tonconnect/ui-react";
 
 export default function TonProvider({ children }: { children: React.ReactNode }) {
   return (
-    <TonConnectUIProvider manifestUrl="https://tonsense.vercel.app/tonconnect-manifest.json">
+    <TonConnectUIProvider manifestUrl="https://ton-sense.vercel.app/tonconnect-manifest.json">
       {children}
     </TonConnectUIProvider>
   );

@@ -15,8 +15,8 @@ export default function Home() {
 
         {/* Header */}
         <div className="relative mb-8 text-center">
-          {/* Wallet button - top right */}
-          <div className="absolute right-0 top-0">
+          {/* Desktop wallet button */}
+          <div className="hidden md:block absolute right-0 top-0">
             <WalletButton />
           </div>
           {/* Logo */}
@@ -50,6 +50,11 @@ export default function Home() {
           <p className="text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
             See what you missed. Plan what&apos;s next.
           </p>
+
+          {/* Mobile wallet button */}
+          <div className="md:hidden mt-4 flex justify-center">
+            <WalletButton />
+          </div>
         </div>
 
         {/* Live Stats */}
