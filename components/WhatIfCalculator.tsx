@@ -147,14 +147,14 @@ export default function WhatIfCalculator() {
           <label className="block text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
             Time Period
           </label>
-          <div className="flex gap-2 flex-wrap">
+          <div className="grid grid-cols-5 gap-1 sm:gap-2">
             {PERIODS.map((p) => {
               const active = period === p.value;
               return (
                 <button
                   key={p.value}
                   onClick={() => setPeriod(p.value)}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
+                  className="px-2 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 text-center"
                   style={
                     active
                       ? {

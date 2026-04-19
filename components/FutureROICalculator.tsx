@@ -318,10 +318,10 @@ export default function FutureROICalculator() {
 
           {/* Table */}
           <div className="rounded-2xl overflow-hidden" style={glass}>
-            <div className="grid grid-cols-5 px-5 py-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="grid grid-cols-4 sm:grid-cols-5 px-4 sm:px-5 py-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <span>Period</span>
               <span className="text-right">Initial</span>
-              <span className="text-right">Earned (TON)</span>
+              <span className="text-right hidden sm:block">Earned (TON)</span>
               <span className="text-right">Earned (USDT)</span>
               <span className="text-right">Total</span>
             </div>
@@ -330,14 +330,14 @@ export default function FutureROICalculator() {
               return (
                 <div
                   key={row.months}
-                  className="grid grid-cols-5 px-5 py-4 text-sm"
+                  className="grid grid-cols-4 sm:grid-cols-5 px-4 sm:px-5 py-4 text-xs sm:text-sm"
                   style={i < forecastRows.length - 1 ? { borderBottom: "1px solid rgba(255,255,255,0.05)" } : {}}
                 >
-                  <span className="font-semibold" style={{ color }}>{row.label}</span>
+                  <span className="font-medium" style={{ color }}>{row.label}</span>
                   <span className="text-right" style={{ color: "rgba(255,255,255,0.45)" }}>
                     ${fmt2(row.initial)}
                   </span>
-                  <span className="text-right text-white">+{row.earnedTON.toFixed(2)}</span>
+                  <span className="text-right text-white hidden sm:block">+{row.earnedTON.toFixed(2)}</span>
                   <span className="text-right" style={{ color: "#22C55E" }}>
                     +${fmt2(row.earnedUSDT)}
                   </span>

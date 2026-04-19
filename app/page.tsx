@@ -11,7 +11,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#080810]">
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="max-w-2xl w-full mx-auto px-3 sm:px-4 py-12">
 
         {/* Header */}
         <div className="relative mb-8 text-center">
@@ -22,7 +22,7 @@ export default function Home() {
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-3">
             <img src="/logo.png" alt="TonSense" className="w-10 h-10 object-contain" />
-            <span className="text-4xl font-black tracking-tight text-white">
+            <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">
               Ton<span className="text-[#0098EA]">Sense</span>
             </span>
           </div>
@@ -76,7 +76,7 @@ export default function Home() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                className="flex-1 py-2 sm:py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                 style={
                   active
                     ? {

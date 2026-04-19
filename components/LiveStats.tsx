@@ -37,10 +37,10 @@ export default function LiveStats() {
         boxShadow: "0 0 60px rgba(0,152,234,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
       }}
     >
-      <div className="grid grid-cols-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3">
 
         {/* TON Price */}
-        <div className="px-5 py-5">
+        <div className="px-4 sm:px-5 py-5">
           <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
             TON Price
           </p>
@@ -51,7 +51,7 @@ export default function LiveStats() {
             </div>
           ) : (
             <>
-              <p className="text-3xl font-black text-white leading-none mb-2">
+              <p className="text-2xl sm:text-3xl font-black text-white leading-none mb-2">
                 ${price.toFixed(4)}
               </p>
               <span
@@ -68,47 +68,41 @@ export default function LiveStats() {
           )}
         </div>
 
-        {/* Divider */}
-        <div className="relative">
+        {/* Staking APY */}
+        <div className="relative px-4 sm:px-5 py-5">
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-10" style={{ background: "rgba(255,255,255,0.1)" }} />
-
-          {/* Staking APY */}
-          <div className="px-5 py-5">
-            <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Staking APY
-            </p>
-            {apy === null ? (
-              <div className="space-y-2">
-                <div className="h-7 w-16 rounded-md bg-white/10 animate-pulse" />
-                <div className="h-4 w-20 rounded-md bg-white/10 animate-pulse" />
-              </div>
-            ) : (
-              <>
-                <p className="text-3xl font-black leading-none mb-2" style={{ color: "#22C55E" }}>
-                  {apy.toFixed(1)}%
-                </p>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>tsTON annual</p>
-              </>
-            )}
-          </div>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Staking APY
+          </p>
+          {apy === null ? (
+            <div className="space-y-2">
+              <div className="h-7 w-16 rounded-md bg-white/10 animate-pulse" />
+              <div className="h-4 w-20 rounded-md bg-white/10 animate-pulse" />
+            </div>
+          ) : (
+            <>
+              <p className="text-2xl sm:text-3xl font-black leading-none mb-2" style={{ color: "#22C55E" }}>
+                {apy.toFixed(1)}%
+              </p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>tsTON annual</p>
+            </>
+          )}
         </div>
 
-        {/* Divider + Network */}
-        <div className="relative">
+        {/* Network — hidden on mobile */}
+        <div className="relative hidden sm:block px-5 py-5">
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-10" style={{ background: "rgba(255,255,255,0.1)" }} />
-          <div className="px-5 py-5">
-            <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Network
-            </p>
-            <p className="text-3xl font-black text-white leading-none mb-2">TON</p>
-            <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-              <span
-                className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse"
-                style={{ boxShadow: "0 0 6px rgba(34,197,94,0.7)" }}
-              />
-              Mainnet
-            </span>
-          </div>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Network
+          </p>
+          <p className="text-3xl font-black text-white leading-none mb-2">TON</p>
+          <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <span
+              className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse"
+              style={{ boxShadow: "0 0 6px rgba(34,197,94,0.7)" }}
+            />
+            Mainnet
+          </span>
         </div>
 
       </div>
