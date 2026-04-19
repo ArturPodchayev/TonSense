@@ -19,6 +19,6 @@ export async function GET() {
     );
     return Response.json({ apy });
   } catch {
-    return Response.json({ apy: 4.2 });
+    return Response.json({ apy: 18.7 });
   }
 }

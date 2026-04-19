@@ -48,7 +48,7 @@ export default function WhatIfCalculator() {
   const walletBalance = useTonBalance();
   const [results, setResults] = useState<Results | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
-  const [apy, setApy] = useState<number>(4.2);
+  const [apy, setApy] = useState<number>(18.7);
   const [currentPrice, setCurrentPrice] = useState<number>(3.24);
   const [change24h, setChange24h] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(true);

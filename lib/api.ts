@@ -36,6 +36,6 @@ export async function fetchStakingAPY(): Promise<number> {
     const data: { apy: number } = await res.json();
     return data.apy;
   } catch {
-    return 4.2;
+    return 18.7;
   }
 }

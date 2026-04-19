@@ -34,7 +34,7 @@ export default function AIAnalysis({ tonPrice, change24h, apy, userAmount, mode 
       .then((data: AnalysisData) => setAnalysis(data))
       .catch(() =>
         setAnalysis({
-          verdict: "Staking tsTON offers steady 4.2% APY yield.",
+          verdict: "Staking tsTON offers steady 18.7% APY yield.",
           risk: "Short-term price volatility may offset staking gains.",
           action: "Stake if bullish on TON long-term recovery.",
         })
