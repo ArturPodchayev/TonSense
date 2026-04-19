@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "TonSense — TON Staking Calculator",
   description: "See what you missed. Plan what's next. AI-powered DeFi analytics for TON blockchain.",
-  icons: { icon: "/logo.png" },
+  icons: { icon: "/favicon.ico" },
   openGraph: {
     title: "TonSense — TON Staking Calculator",
     description: "See what you missed. Plan what's next.",
@@ -28,6 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.className}>
+      <head>
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+      </head>
       <body className="min-h-screen bg-[#0A0A0F] text-white antialiased">
         <TonProvider>{children}</TonProvider>
       </body>
