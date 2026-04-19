@@ -258,7 +258,7 @@ export default function WhatIfCalculator() {
           {/* Action buttons */}
           <div className="flex gap-2">
             <a
-              href="https://t.me/STONfi_bot"
+              href="https://app.ston.fi/swap?chartVisible=false&ft=TON&tt=STON"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
@@ -271,7 +271,7 @@ export default function WhatIfCalculator() {
               ⚡ Swap on Ston.fi →
             </a>
             <a
-              href={`https://tonstakers.com/?amount=${results.tonAmount}`}
+              href="https://app.tonstakers.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
