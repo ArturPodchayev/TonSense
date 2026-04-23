@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import TonProvider from "@/providers/TonProvider";
+import TmaProvider from "@/providers/TmaProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,7 +38,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className="min-h-screen bg-[#0A0A0F] text-white antialiased">
-        <TonProvider>{children}</TonProvider>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <TonProvider>
+          <TmaProvider>{children}</TmaProvider>
+        </TonProvider>
       </body>
     </html>
   );

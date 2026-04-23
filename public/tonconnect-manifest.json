@@ -1,5 +1,6 @@
 {
   "url": "https://ton-sense.vercel.app",
   "name": "TonSense",
-  "iconUrl": "https://ton-sense.vercel.app/logo.png"
+  "iconUrl": "https://ton-sense.vercel.app/logo.png",
+  "platforms": ["ios", "android", "macos", "windows", "linux"]
 }
