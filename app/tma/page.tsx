@@ -6,13 +6,15 @@ import WhatIfCalculator from "@/components/WhatIfCalculator";
 import FutureROICalculator from "@/components/FutureROICalculator";
 import AgentChat from "@/components/AgentChat";
 import Profile from "@/components/Profile";
+import DCACalculator from "@/components/DCACalculator";
 
-type Tab = "future" | "whatif" | "agent" | "profile";
+type Tab = "future" | "whatif" | "agent" | "dca" | "profile";
 
 const NAV_ITEMS: { tab: Tab; icon: string; label: string }[] = [
   { tab: "future",  icon: "📈", label: "Dashboard" },
   { tab: "whatif",  icon: "🕐", label: "What If"   },
   { tab: "agent",   icon: "🤖", label: "AI Agent"  },
+  { tab: "dca",     icon: "📅", label: "DCA"        },
   { tab: "profile", icon: "👤", label: "Profile"   },
 ];
 
@@ -58,6 +60,7 @@ export default function TmaPage() {
           {activeTab === "future"  ? <FutureROICalculator /> :
            activeTab === "whatif"  ? <WhatIfCalculator />    :
            activeTab === "agent"   ? <AgentChat />           :
+           activeTab === "dca"     ? <DCACalculator />       :
            <Profile />}
         </div>
       </div>
