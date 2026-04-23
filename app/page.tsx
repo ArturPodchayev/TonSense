@@ -8,12 +8,21 @@ import WalletButton from "@/components/WalletButton";
 import AgentChat from "@/components/AgentChat";
 import Profile from "@/components/Profile";
 
+type Tab = "future" | "whatif" | "agent" | "profile";
+
+const NAV_ITEMS: { tab: Tab; icon: string; label: string }[] = [
+  { tab: "future",  icon: "📈", label: "Dashboard" },
+  { tab: "whatif",  icon: "🕐", label: "What If"   },
+  { tab: "agent",   icon: "🤖", label: "AI Agent"  },
+  { tab: "profile", icon: "👤", label: "Profile"   },
+];
+
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"whatif" | "future" | "agent" | "profile">("whatif");
+  const [activeTab, setActiveTab] = useState<Tab>("future");
 
   return (
     <div className="min-h-screen bg-[#080810]">
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-10">
+      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-10 pb-24">
 
         {/* Header */}
         <div className="mb-8">
@@ -57,46 +66,53 @@ export default function Home() {
         {/* Live Stats */}
         <LiveStats />
 
-        {/* Tab Switcher */}
-        <div
-          className="flex mt-8 mb-8 p-1 rounded-2xl"
-          style={{
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          {(["whatif", "future", "agent", "profile"] as const).map((tab) => {
+        {/* Content */}
+        <div className="mt-8">
+          {activeTab === "future"  ? <FutureROICalculator /> :
+           activeTab === "whatif"  ? <WhatIfCalculator />    :
+           activeTab === "agent"   ? <AgentChat />           :
+           <Profile />}
+        </div>
+      </div>
+
+      {/* Bottom Nav */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50"
+        style={{
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          background: "rgba(8,8,16,0.85)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <div className="max-w-2xl mx-auto flex pb-4 pt-2">
+          {NAV_ITEMS.map(({ tab, icon, label }) => {
             const active = activeTab === tab;
-            const label =
-              tab === "whatif" ? "What If" :
-              tab === "future" ? "Future ROI" :
-              tab === "agent" ? "🤖 AI" :
-              "👤 Profile";
-            const activeStyle =
-              tab === "agent"
-                ? { background: "linear-gradient(135deg, #7C3AED, #0098EA)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", color: "#fff" }
-                : { background: "linear-gradient(135deg, #0098EA, #0077BB)", boxShadow: "0 4px 20px rgba(0,152,234,0.35)", color: "#fff" };
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="flex-1 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200"
-                style={active ? activeStyle : { color: "rgba(255,255,255,0.4)" }}
+                className="flex-1 flex flex-col items-center gap-0.5 py-1 transition-colors duration-200"
               >
-                {label}
+                <span className="text-xl leading-none">{icon}</span>
+                <span
+                  className="text-[10px] font-medium leading-none"
+                  style={{ color: active ? "#0098EA" : "rgba(255,255,255,0.35)" }}
+                >
+                  {label}
+                </span>
+                <span
+                  className="w-1 h-1 rounded-full mt-0.5 transition-opacity duration-200"
+                  style={{
+                    background: "#0098EA",
+                    opacity: active ? 1 : 0,
+                  }}
+                />
               </button>
             );
           })}
         </div>
-
-        {/* Content */}
-        {activeTab === "whatif" ? <WhatIfCalculator /> :
-         activeTab === "future" ? <FutureROICalculator /> :
-         activeTab === "agent" ? <AgentChat /> :
-         <Profile />}
-      </div>
+      </nav>
     </div>
   );
 }
