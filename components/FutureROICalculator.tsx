@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -72,13 +72,20 @@ const fmt2 = (n: number) =>
 
 export default function FutureROICalculator() {
   const [amount, setAmount] = useState<string>("");
+  const [debouncedAmount, setDebouncedAmount] = useState<string>("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedPeriods, setSelectedPeriods] = useState<number[]>([1, 3, 12]);
   const walletBalance = useTonBalance();
-  const [showResults, setShowResults] = useState(false);
   const [apy, setApy] = useState<number>(18.7);
   const [currentPrice, setCurrentPrice] = useState<number>(1.33);
   const [change24h, setChange24h] = useState<number>(0);
   const [inTON, setInTON] = useState(false);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedAmount(amount), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [amount]);
 
   useEffect(() => {
     if (walletBalance && !amount) {
@@ -102,10 +109,9 @@ export default function FutureROICalculator() {
           : prev
         : [...prev, months]
     );
-    setShowResults(false);
   }
 
-  const ton = parseFloat(amount);
+  const ton = parseFloat(debouncedAmount);
   const isValid = ton > 0 && !isNaN(ton);
   const apyDecimal = apy / 100;
 
@@ -124,10 +130,9 @@ export default function FutureROICalculator() {
     };
   });
 
-  const chartData =
-    isValid && showResults
-      ? buildChartData(ton, currentPrice, apyDecimal, selectedPeriods, inTON)
-      : [];
+  const chartData = isValid
+    ? buildChartData(ton, currentPrice, apyDecimal, selectedPeriods, inTON)
+    : [];
 
   return (
     <div className="space-y-4">
@@ -140,10 +145,7 @@ export default function FutureROICalculator() {
           <input
             type="number"
             value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              setShowResults(false);
-            }}
+            onChange={(e) => setAmount(e.target.value)}
             placeholder="e.g. 5000"
             className="w-full rounded-xl px-4 py-3 text-white text-sm font-medium transition-all outline-none placeholder:text-white/20"
             style={{
@@ -156,7 +158,7 @@ export default function FutureROICalculator() {
           {walletBalance && (
             <>
               <button
-                onClick={() => { setAmount(walletBalance.toString()); setShowResults(false); }}
+                onClick={() => setAmount(walletBalance.toString())}
                 className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg transition-all"
                 style={{
                   background: "rgba(0,152,234,0.1)",
@@ -174,7 +176,6 @@ export default function FutureROICalculator() {
                     onClick={() => {
                       const val = parseFloat((walletBalance * pct / 100).toFixed(2));
                       setAmount(String(val).replace(",", "."));
-                      setShowResults(false);
                     }}
                     className="flex-1 font-semibold transition-all hover:opacity-80"
                     style={{
@@ -244,23 +245,10 @@ export default function FutureROICalculator() {
           </span>
         </div>
 
-        <button
-          onClick={() => setShowResults(true)}
-          disabled={!isValid}
-          className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            background: "linear-gradient(135deg, #0098EA 0%, #0077BB 100%)",
-            boxShadow: "0 4px 30px rgba(0,152,234,0.35)",
-          }}
-          onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.01)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-        >
-          Show Forecast
-        </button>
       </div>
 
       {/* Results */}
-      {showResults && isValid && (
+      {isValid && (
         <div className="space-y-4">
           {/* Chart */}
           <div className="rounded-2xl p-5" style={glass}>
