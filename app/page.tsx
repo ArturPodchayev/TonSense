@@ -5,9 +5,10 @@ import LiveStats from "@/components/LiveStats";
 import WhatIfCalculator from "@/components/WhatIfCalculator";
 import FutureROICalculator from "@/components/FutureROICalculator";
 import WalletButton from "@/components/WalletButton";
+import AgentChat from "@/components/AgentChat";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"whatif" | "future">("whatif");
+  const [activeTab, setActiveTab] = useState<"whatif" | "future" | "agent">("whatif");
 
   return (
     <div className="min-h-screen bg-[#080810]">
@@ -65,31 +66,28 @@ export default function Home() {
             border: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          {(["whatif", "future"] as const).map((tab) => {
+          {(["whatif", "future", "agent"] as const).map((tab) => {
             const active = activeTab === tab;
+            const label = tab === "whatif" ? "What If" : tab === "future" ? "Future ROI" : "🤖 AI Agent";
+            const activeStyle =
+              tab === "agent"
+                ? { background: "linear-gradient(135deg, #7C3AED, #0098EA)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)", color: "#fff" }
+                : { background: "linear-gradient(135deg, #0098EA, #0077BB)", boxShadow: "0 4px 20px rgba(0,152,234,0.35)", color: "#fff" };
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className="flex-1 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200"
-                style={
-                  active
-                    ? {
-                        background: "linear-gradient(135deg, #0098EA, #0077BB)",
-                        boxShadow: "0 4px 20px rgba(0,152,234,0.35)",
-                        color: "#fff",
-                      }
-                    : { color: "rgba(255,255,255,0.4)" }
-                }
+                style={active ? activeStyle : { color: "rgba(255,255,255,0.4)" }}
               >
-                {tab === "whatif" ? "What If" : "Future ROI"}
+                {label}
               </button>
             );
           })}
         </div>
 
-        {/* Calculator */}
-        {activeTab === "whatif" ? <WhatIfCalculator /> : <FutureROICalculator />}
+        {/* Content */}
+        {activeTab === "whatif" ? <WhatIfCalculator /> : activeTab === "future" ? <FutureROICalculator /> : <AgentChat />}
       </div>
     </div>
   );
