@@ -14,6 +14,9 @@ import {
 import { fetchStakingAPY, fetchTonPrice } from "@/lib/api";
 import { useTonBalance } from "@/hooks/useTonBalance";
 import AIAnalysis from "@/components/AIAnalysis";
+import Toast from "@/components/Toast";
+import TxButton from "@/components/TxButton";
+import { buildStakeTx, buildSwapTx } from "@/lib/transactions";
 
 const PERIOD_OPTIONS = [
   { label: "1 month", months: 1, color: "#0098EA" },
@@ -80,6 +83,7 @@ export default function FutureROICalculator() {
   const [currentPrice, setCurrentPrice] = useState<number>(1.33);
   const [change24h, setChange24h] = useState<number>(0);
   const [inTON, setInTON] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -136,6 +140,7 @@ export default function FutureROICalculator() {
 
   return (
     <div className="space-y-4">
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       {/* Input card */}
       <div className="rounded-2xl p-6 space-y-5" style={glass}>
         <div>
@@ -388,32 +393,22 @@ export default function FutureROICalculator() {
 
           {/* Action buttons */}
           <div className="flex gap-2">
-            <a
-              href="https://app.tonstakers.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
-              style={{
-                background: "linear-gradient(135deg, #0098EA, #0077BB)",
-                boxShadow: "0 4px 20px rgba(0,152,234,0.3)",
-                color: "#fff",
-              }}
-            >
-              💎 Stake on Tonstakers →
-            </a>
-            <a
-              href="https://app.ston.fi/swap?chartVisible=false&ft=TON&tt=STON"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "rgba(255,255,255,0.7)",
-              }}
-            >
-              ⚡ Swap on Ston.fi →
-            </a>
+            <TxButton
+              label="💎 Stake on Tonstakers"
+              amountTon={ton}
+              txData={buildStakeTx(ton)}
+              onSuccess={() => setToast("Staking tx sent!")}
+              onError={(e) => setToast("Error: " + e.message)}
+              className="flex-1"
+            />
+            <TxButton
+              label="⚡ Swap on Ston.fi"
+              amountTon={ton}
+              txData={buildSwapTx(ton)}
+              onSuccess={() => setToast("Swap tx sent!")}
+              onError={(e) => setToast("Error: " + e.message)}
+              className="flex-1"
+            />
           </div>
         </div>
       )}
