@@ -195,25 +195,23 @@ export default function AgentChat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Suggestions */}
-        {!hasMessages && (
-          <div className="px-4 pb-3 flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => send(s)}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02]"
-                style={{
-                  background: "rgba(0,152,234,0.08)",
-                  border: "1px solid rgba(0,152,234,0.2)",
-                  color: "rgba(255,255,255,0.6)",
-                }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Suggestions — always visible, horizontal scroll */}
+        <div className="px-3 pt-2 pb-1 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => send(s)}
+              className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02]"
+              style={{
+                background: "rgba(0,152,234,0.08)",
+                border: "1px solid rgba(0,152,234,0.2)",
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
 
         {/* Input */}
         <div

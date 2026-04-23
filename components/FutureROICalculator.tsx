@@ -154,18 +154,43 @@ export default function FutureROICalculator() {
             onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
           {walletBalance && (
-            <button
-              onClick={() => setAmount(walletBalance.toString())}
-              className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg transition-all"
-              style={{
-                background: "rgba(0,152,234,0.1)",
-                border: "1px solid rgba(0,152,234,0.2)",
-                color: "#0098EA",
-              }}
-            >
-              <span>💎</span>
-              <span>Use wallet balance: <strong>{walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</strong></span>
-            </button>
+            <>
+              <button
+                onClick={() => { setAmount(walletBalance.toString()); setShowResults(false); }}
+                className="flex items-center gap-1.5 text-xs mt-2 px-3 py-1.5 rounded-lg transition-all"
+                style={{
+                  background: "rgba(0,152,234,0.1)",
+                  border: "1px solid rgba(0,152,234,0.2)",
+                  color: "#0098EA",
+                }}
+              >
+                <span>💎</span>
+                <span>Use wallet balance: <strong>{walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON</strong></span>
+              </button>
+              <div className="flex gap-2 mt-2">
+                {([25, 50, 75, 100] as const).map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => {
+                      const val = parseFloat((walletBalance * pct / 100).toFixed(2));
+                      setAmount(String(val).replace(",", "."));
+                      setShowResults(false);
+                    }}
+                    className="flex-1 font-semibold transition-all hover:opacity-80"
+                    style={{
+                      background: "rgba(0,152,234,0.08)",
+                      border: "1px solid rgba(0,152,234,0.2)",
+                      color: "rgba(0,152,234,0.8)",
+                      borderRadius: 8,
+                      fontSize: 11,
+                      padding: "4px 0",
+                    }}
+                  >
+                    {pct === 100 ? "MAX" : `${pct}%`}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -376,30 +401,30 @@ export default function FutureROICalculator() {
           {/* Action buttons */}
           <div className="flex gap-2">
             <a
-              href="https://app.ston.fi/swap?chartVisible=false&ft=TON&tt=STON"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
-              style={{
-                background: "linear-gradient(135deg, rgba(0,152,234,0.15), rgba(0,152,234,0.05))",
-                border: "1px solid rgba(0,152,234,0.3)",
-                color: "#0098EA",
-              }}
-            >
-              ⚡ Swap on Ston.fi →
-            </a>
-            <a
               href="https://app.tonstakers.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                color: "rgba(255,255,255,0.7)",
+                background: "linear-gradient(135deg, #0098EA, #0077BB)",
+                boxShadow: "0 4px 20px rgba(0,152,234,0.3)",
+                color: "#fff",
               }}
             >
               💎 Stake on Tonstakers →
+            </a>
+            <a
+              href="https://app.ston.fi/swap?chartVisible=false&ft=TON&tt=STON"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.7)",
+              }}
+            >
+              ⚡ Swap on Ston.fi →
             </a>
           </div>
         </div>
