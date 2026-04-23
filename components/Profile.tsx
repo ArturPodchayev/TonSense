@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+
+const AVATAR_EMOJIS = ['🦁','🐯','🦊','🐺','🦝','🐻','🐼','🦄','🐲','🦅','🦋','🐬','🦈','🦍','🤖','👾','🛸','⚡','🔥','🌊','🎯','💀','🎭','🧠','👁️'];
+
+function getWalletEmoji(address: string): string {
+  if (!address) return '👤';
+  const code = address.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return AVATAR_EMOJIS[code % AVATAR_EMOJIS.length];
+}
 import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
 import { useTonBalance } from "@/hooks/useTonBalance";
 import { fetchTonPrice, fetchStakingAPY } from "@/lib/api";
@@ -127,7 +135,7 @@ export default function Profile() {
               boxShadow: "0 0 24px rgba(0,152,234,0.25)",
             }}
           >
-            💎
+            {getWalletEmoji(address)}
           </div>
 
           <div className="flex-1 min-w-0">
