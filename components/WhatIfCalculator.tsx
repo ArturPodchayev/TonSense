@@ -274,7 +274,7 @@ export default function WhatIfCalculator() {
             <TxButton
               label="💎 Stake on Tonstakers"
               amountTon={results.tonAmount}
-              txData={buildStakeTx(results.tonAmount)}
+              buildTx={() => buildStakeTx(results.tonAmount)}
               onSuccess={() => setToast("Staking tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"
@@ -282,7 +282,7 @@ export default function WhatIfCalculator() {
             <TxButton
               label="⚡ Swap on Ston.fi"
               amountTon={results.tonAmount}
-              txData={buildSwapTx(results.tonAmount)}
+              buildTx={() => buildSwapTx(results.tonAmount)}
               onSuccess={() => setToast("Swap tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"

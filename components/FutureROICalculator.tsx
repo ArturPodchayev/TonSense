@@ -396,7 +396,7 @@ export default function FutureROICalculator() {
             <TxButton
               label="💎 Stake on Tonstakers"
               amountTon={ton}
-              txData={buildStakeTx(ton)}
+              buildTx={() => buildStakeTx(ton)}
               onSuccess={() => setToast("Staking tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"
@@ -404,7 +404,7 @@ export default function FutureROICalculator() {
             <TxButton
               label="⚡ Swap on Ston.fi"
               amountTon={ton}
-              txData={buildSwapTx(ton)}
+              buildTx={() => buildSwapTx(ton)}
               onSuccess={() => setToast("Swap tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"

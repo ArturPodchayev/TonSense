@@ -419,7 +419,7 @@ export default function DCACalculator() {
             <TxButton
               label="⚡ Swap TON first"
               amountTon={ton}
-              txData={buildSwapTx(ton)}
+              buildTx={() => buildSwapTx(ton)}
               onSuccess={() => setToast("Swap tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"

@@ -11,7 +11,7 @@ interface TxData {
 interface TxButtonProps {
   label: string;
   amountTon: number;
-  txData: TxData;
+  buildTx: () => TxData;
   onSuccess?: () => void;
   onError?: (e: Error) => void;
   disabled?: boolean;
@@ -23,7 +23,7 @@ type Status = "idle" | "loading" | "success" | "error";
 export default function TxButton({
   label,
   amountTon,
-  txData,
+  buildTx,
   onSuccess,
   onError,
   disabled,
@@ -53,9 +53,14 @@ export default function TxButton({
   async function handleClick() {
     if (disabled || status === "loading") return;
 
-    if (amountTon < 0.1) {
-      setErrorMsg("Minimum 0.1 TON");
+    let txData: TxData;
+    try {
+      txData = buildTx();
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error("Invalid transaction");
+      setErrorMsg(err.message);
       setStatus("error");
+      onError?.(err);
       setTimeout(() => setStatus("idle"), 3000);
       return;
     }
