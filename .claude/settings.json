@@ -4,7 +4,8 @@
       "Bash(npm install *)",
       "Bash(npm run *)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(node -e \"require\\('node-telegram-bot-api'\\); console.log\\('ok'\\)\")"
     ]
   }
 }
