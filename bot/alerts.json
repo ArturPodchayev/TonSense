@@ -1,0 +1,9 @@
+[
+  {
+    "chatId": 824969095,
+    "type": "price",
+    "direction": "above",
+    "threshold": 6.7,
+    "active": true
+  }
+]

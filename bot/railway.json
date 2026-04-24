@@ -1,0 +1,9 @@
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "bot/Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "cd bot && npm start"
+  }
+}
