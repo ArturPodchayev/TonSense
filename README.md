@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💎 TonSense
 
-## Getting Started
+### *See what you missed. Plan what's next.*
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-14-black) ![TypeScript](https://img.shields.io/badge/TypeScript-blue) ![TON](https://img.shields.io/badge/TON-Blockchain-0098EA) ![Vercel](https://img.shields.io/badge/Deployed-Vercel-black) ![License](https://img.shields.io/badge/License-MIT-green)
+
+🌐 **Live demo:** [ton-sense.vercel.app](https://ton-sense.vercel.app) &nbsp;|&nbsp; 🤖 **Telegram bot:** [@Ton\_Sense\_bot](https://t.me/Ton_Sense_bot)
+
+---
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🤖 **AI Agent** | TON DeFi expert powered by DeepSeek with live price & APY context |
+| 📈 **Future ROI Calculator** | Reactive staking projections using real-time Tonstakers APY |
+| 🕐 **What If Calculator** | FOMO analysis — see what returns you would have earned |
+| 💎 **On-chain Staking** | Real Tonstakers integration with actual wallet transactions |
+| 👤 **Profile** | Wallet identity, portfolio overview, and transaction history |
+| 📅 **DCA Simulator** | Dollar cost averaging strategy calculator |
+| 🔔 **Telegram Bot** | Smart price & APY alerts, inline wallet launch |
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14 App Router + TypeScript |
+| Styling | Tailwind CSS + Glassmorphism |
+| Charts | Recharts |
+| Wallet | TON Connect 2.0 |
+| AI | DeepSeek API |
+| On-chain | @ton/core — real Tonstakers transactions |
+| Price Data | CoinGecko API |
+| Bot | node-telegram-bot-api |
+| Deploy | Vercel (app) + Railway (bot) |
+
+---
+
+## 🚀 Getting Started
+
+### App
 
 ```bash
+git clone https://github.com/ArturPodchayev/TonSense
+cd TonSense
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Bot
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd bot
+npm install
+cp .env.example .env
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🔑 Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+### App (`.env.local`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+DEEPSEEK_API_KEY=your_key
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Bot (`bot/.env`)
 
-## Deploy on Vercel
+```
+TELEGRAM_BOT_TOKEN=your_token
+DEEPSEEK_API_KEY=your_key
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📱 Screenshots
+
+> Screenshots coming soon
+
+---
+
+## 🏗 Architecture
+
+- **Next.js App Router** with 4 API route handlers (`/api/ton-price`, `/api/staking-apy`, `/api/agent`, `/api/history`)
+- **TON Connect 2.0** for non-custodial wallet integration
+- **Real on-chain transactions** via `@ton/core` — builds and signs Tonstakers deposit payloads
+- **DeepSeek AI** with live market context injected per request (price, APY, wallet balance)
+- **Telegram bot** with long-polling, per-chat alert state, and `alerts.json` persistence
+
+---
+
+## 🤖 Bot Commands
+
+| Command | Description |
+|---|---|
+| `/start` | Welcome message + inline app launcher |
+| `/price` | Live TON price, 24h change, and staking yield projection |
+| `/apy` | Detailed tsTON APY with monthly & yearly TON/USD breakdown |
+| `/alert` | Set a smart price or APY threshold notification |
+| `/alerts` | List all your active alerts |
+| `/stop` | Disable all your alerts |
+| `/ask [question]` | Ask TonSenseAI anything about TON DeFi |
+| `/help` | Show all commands |
+
+---
+
+## 📄 License
+
+MIT
+
+---
+
+## 👨‍💻 Built by
+
+**Artur Podchaev** — 17 y.o. tech lead & developer from Tashkent
+- 🌐 Portfolio: [arturpodchaev.uz](https://arturpodchaev.uz)
+- 💼 LinkedIn: [linkedin.com/in/arturpodchayev](https://linkedin.com/in/arturpodchayev)
+- 🐙 GitHub: [ArturPodchayev](https://github.com/ArturPodchayev)
+
+**greejjddg09** — QA & testing
+- 🐙 GitHub: [greejjddg09](https://github.com/greejjddg09)
+
+---
+
+*Built during the TON Hackathon (Ston.fi track) — evolved into a full DeFi dApp.*
