@@ -16,7 +16,7 @@ import AIAnalysis from "@/components/AIAnalysis";
 import ShareCard from "@/components/ShareCard";
 import Toast from "@/components/Toast";
 import TxButton from "@/components/TxButton";
-import { buildStakeTx, buildSwapTx } from "@/lib/transactions";
+import { buildStakeTx } from "@/lib/transactions";
 
 const PERIODS = [
   { label: "7d", value: 7 },
@@ -274,19 +274,24 @@ export default function WhatIfCalculator() {
             <TxButton
               label="💎 Stake on Tonstakers"
               amountTon={results.tonAmount}
-              buildTx={() => buildStakeTx(1)} // TEST: hardcoded 1 TON - revert after testing
+              buildTx={() => buildStakeTx(parseFloat(amount))}
               onSuccess={() => setToast("Staking tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"
             />
-            <TxButton
-              label="⚡ Swap on Ston.fi"
-              amountTon={results.tonAmount}
-              buildTx={() => buildSwapTx(results.tonAmount)}
-              onSuccess={() => setToast("Swap tx sent!")}
-              onError={(e) => setToast("Error: " + e.message)}
-              className="flex-1"
-            />
+            <a
+              href="https://app.ston.fi/swap?ft=TON&tt=tsTON"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center py-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.01]"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.75)",
+              }}
+            >
+              ⚡ Swap on Ston.fi →
+            </a>
           </div>
 
           {/* Share button */}
