@@ -4,18 +4,30 @@ import { toNano, beginCell } from "@ton/core";
 export function buildStakeTx(amountTon: number) {
   if (amountTon < 1) throw new Error("Minimum stake is 1 TON");
 
+  const queryId = Date.now() % 0xffffffff;
+
+  // Referral cell (empty referral = 0x10 prefix + zeros)
+  const referralCell = beginCell()
+    .storeUint(0x10000000, 32)
+    .storeUint(0, 64)
+    .endCell();
+
+  const payload = beginCell()
+    .storeUint(0x47d54391, 32)  // TonstakePoolDeposit op
+    .storeUint(queryId, 64)     // query_id
+    .storeUint(1, 32)           // referral flag
+    .storeRef(referralCell)     // referral cell
+    .endCell()
+    .toBoc()
+    .toString("base64");
+
   return {
     validUntil: Math.floor(Date.now() / 1000) + 300,
     messages: [
       {
         address: "EQCkWxfyhAkim3g2DjKQQg8T5P4g-Q1-K_jErGcDJZ4i-vqR",
-        amount: toNano(amountTon).toString(),
-        payload: beginCell()
-          .storeUint(0, 32)
-          .storeStringTail("d")
-          .endCell()
-          .toBoc()
-          .toString("base64"),
+        amount: (toNano(amountTon) + toNano("0.1")).toString(), // 0.1 TON gas
+        payload,
       },
     ],
   };
