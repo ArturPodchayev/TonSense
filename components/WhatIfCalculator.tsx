@@ -275,6 +275,12 @@ export default function WhatIfCalculator() {
               label="💎 Stake on Tonstakers"
               amountTon={results.tonAmount}
               buildTx={() => buildStakeTx(parseFloat(amount))}
+              simulationData={{
+                send: amount,
+                receive: (parseFloat(amount) * 0.909).toFixed(3),
+                receiveToken: "tsTON",
+                fee: "0.003",
+              }}
               onSuccess={() => setToast("Staking tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"
