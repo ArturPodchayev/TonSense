@@ -34,7 +34,7 @@
 | On-chain | @ton/core — real Tonstakers transactions |
 | Price Data | CoinGecko API |
 | Bot | node-telegram-bot-api |
-| Deploy | Vercel (app) + Railway (bot) |
+| Deploy | Vercel (app) |
 
 ---
 
