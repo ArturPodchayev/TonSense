@@ -6,6 +6,7 @@
     "dev": "ts-node-dev --respawn index.ts"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "node-telegram-bot-api": "^0.66.0"
   },
   "devDependencies": {
