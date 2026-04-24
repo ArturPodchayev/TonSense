@@ -1,26 +1,16 @@
 import { toNano, beginCell } from "@ton/core";
 
-// Tonstakers liquid staking deposit contract (mainnet)
-// Source: https://github.com/tonstakers/tonstakers-sdk/blob/main/src/constants.ts
 // Verify contract address before mainnet use
-const TONSTAKERS_CONTRACT = "EQCkWxfyhAkim3g2DjKQQg8T5P4g-Q1-K_jErGcDJZ4i-vqR";
-
 export function buildStakeTx(amountTon: number) {
   if (amountTon < 1) throw new Error("Minimum stake is 1 TON");
-  const totalNano = toNano(amountTon) + toNano(0.15); // 0.15 TON gas on top
+
   return {
     validUntil: Math.floor(Date.now() / 1000) + 300,
     messages: [
       {
-        address: TONSTAKERS_CONTRACT,
-        amount: totalNano.toString(),
-        payload: beginCell()
-          .storeUint(0x47d54391, 32) // deposit op code
-          .storeUint(0, 64)          // query id
-          .storeCoins(BigInt(1))     // min expected
-          .endCell()
-          .toBoc()
-          .toString("base64"),
+        address: "EQCkWxfyhAkim3g2DjKQQg8T5P4g-Q1-K_jErGcDJZ4i-vqR",
+        amount: toNano(amountTon).toString(),
+        // Simple transfer with no payload - Tonstakers detects deposit by amount
       },
     ],
   };
