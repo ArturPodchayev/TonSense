@@ -10,7 +10,12 @@ export function buildStakeTx(amountTon: number) {
       {
         address: "EQCkWxfyhAkim3g2DjKQQg8T5P4g-Q1-K_jErGcDJZ4i-vqR",
         amount: toNano(amountTon).toString(),
-        // Simple transfer with no payload - Tonstakers detects deposit by amount
+        payload: beginCell()
+          .storeUint(0, 32)
+          .storeStringTail("d")
+          .endCell()
+          .toBoc()
+          .toString("base64"),
       },
     ],
   };
