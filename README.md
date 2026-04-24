@@ -120,7 +120,6 @@ MIT
 **Artur Podchaev** — 17 y.o. tech lead & developer from Tashkent
 - 🌐 Portfolio: [arturpodchaev.uz](https://arturpodchaev.uz)
 - 💼 LinkedIn: [linkedin.com/in/arturpodchayev](https://linkedin.com/in/arturpodchayev)
-- 🐙 GitHub: [ArturPodchayev](https://github.com/ArturPodchayev)
 
 **greejjddg09** — QA & testing
 - 🐙 GitHub: [greejjddg09](https://github.com/greejjddg09)
