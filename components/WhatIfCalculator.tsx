@@ -274,7 +274,7 @@ export default function WhatIfCalculator() {
             <TxButton
               label="💎 Stake on Tonstakers"
               amountTon={results.tonAmount}
-              buildTx={() => buildStakeTx(results.tonAmount)}
+              buildTx={() => buildStakeTx(1)} // TEST: hardcoded 1 TON - revert after testing
               onSuccess={() => setToast("Staking tx sent!")}
               onError={(e) => setToast("Error: " + e.message)}
               className="flex-1"
