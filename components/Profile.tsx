@@ -329,15 +329,19 @@ export default function Profile() {
           </p>
         </div>
         {[
-          { icon: "📢", label: "TonSense Channel",  url: "https://t.me/TonSense_official"        },
-          { icon: "💬", label: "Support Chat",       url: "https://t.me/+ls8wv93nO9swYjli"       },
-          { icon: "🤖", label: "Telegram Bot",       url: "https://t.me/Ton_Sense_bot"           },
-        ].map(({ icon, label, url }, idx, arr) => (
+          { icon: "📢", label: "TonSense Channel",  url: "https://t.me/TonSense_official",  external: true  },
+          { icon: "💬", label: "Support Chat",       url: "https://t.me/+ls8wv93nO9swYjli", external: true  },
+          { icon: "🤖", label: "Telegram Bot",       url: "https://t.me/Ton_Sense_bot",      external: true  },
+          { icon: "📄", label: "Terms of Use",       url: "/terms",                          external: false },
+        ].map(({ icon, label, url, external }, idx, arr) => (
           <button
             key={label}
             className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
             style={idx < arr.length - 1 ? { borderBottom: "1px solid rgba(255,255,255,0.04)" } : {}}
-            onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+            onClick={() => {
+              if (external) window.open(url, "_blank", "noopener,noreferrer");
+              else window.location.href = url;
+            }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
