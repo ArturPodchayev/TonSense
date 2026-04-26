@@ -26,25 +26,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#080810]">
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-10 pb-24">
+      <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-24">
 
         {/* Header */}
         <div className="mb-8">
           {/* Top row: logo left, wallet right */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Left: logo */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <img src="/logo.png" alt="TonSense" className="w-7 h-7 sm:w-9 sm:h-9 object-contain" />
               <span className="text-xl sm:text-3xl font-black tracking-tight text-white">
                 Ton<span className="text-[#0098EA]">Sense</span>
               </span>
             </div>
-            <WalletButton />
-            <div className="flex items-center gap-1.5">
+            {/* Right: wallet + icons */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <WalletButton />
               <a
                 href="https://t.me/TonSense_official"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center transition-colors"
+                className="flex-shrink-0 flex items-center justify-center transition-colors"
                 style={{
                   width: 32, height: 32, borderRadius: "50%",
                   background: "rgba(255,255,255,0.06)",
@@ -62,7 +64,7 @@ export default function Home() {
                 href="https://t.me/+ls8wv93nO9swYjli"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center transition-colors"
+                className="flex-shrink-0 flex items-center justify-center transition-colors"
                 style={{
                   width: 32, height: 32, borderRadius: "50%",
                   background: "rgba(255,255,255,0.06)",
