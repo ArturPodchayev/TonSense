@@ -5,7 +5,10 @@
       "Bash(npm run *)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(node -e \"require\\('node-telegram-bot-api'\\); console.log\\('ok'\\)\")"
+      "Bash(node -e \"require\\('node-telegram-bot-api'\\); console.log\\('ok'\\)\")",
+      "Bash(node -e \"require\\('@ston-fi/sdk'\\); console.log\\('ok'\\)\")",
+      "Bash(node -e \"const sdk = require\\('@ston-fi/sdk'\\); console.log\\(Object.keys\\(sdk\\).join\\(', '\\)\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

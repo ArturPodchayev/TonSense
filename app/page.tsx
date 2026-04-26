@@ -8,13 +8,15 @@ import WalletButton from "@/components/WalletButton";
 import AgentChat from "@/components/AgentChat";
 import Profile from "@/components/Profile";
 import DCACalculator from "@/components/DCACalculator";
+import SwapCalculator from "@/components/SwapCalculator";
 
-type Tab = "future" | "whatif" | "agent" | "dca" | "profile";
+type Tab = "future" | "whatif" | "agent" | "swap" | "dca" | "profile";
 
 const NAV_ITEMS: { tab: Tab; icon: string; label: string }[] = [
   { tab: "future",  icon: "📈", label: "Dashboard" },
   { tab: "whatif",  icon: "🕐", label: "What If"   },
   { tab: "agent",   icon: "🤖", label: "AI Agent"  },
+  { tab: "swap",    icon: "⚡", label: "Swap"       },
   { tab: "dca",     icon: "📅", label: "DCA"        },
   { tab: "profile", icon: "👤", label: "Profile"   },
 ];
@@ -73,6 +75,7 @@ export default function Home() {
           {activeTab === "future"  ? <FutureROICalculator /> :
            activeTab === "whatif"  ? <WhatIfCalculator />    :
            activeTab === "agent"   ? <AgentChat />           :
+           activeTab === "swap"    ? <SwapCalculator />      :
            activeTab === "dca"     ? <DCACalculator />       :
            <Profile />}
         </div>
