@@ -117,7 +117,7 @@ export default function SwapCalculator() {
         offer_address: fromToken.address,
         ask_address:   toToken.address,
         units,
-        slippage_tolerance: "0.01",
+        slippage_tolerance: "0.05",
       });
       const res = await fetch(`https://api.ston.fi/v1/swap/simulate?${params}`, { method: "POST" });
       if (!res.ok) throw new Error("simulate failed");
