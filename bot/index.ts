@@ -189,7 +189,7 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/help/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    `🤖 *TonSense Commands*\n\n/start — Launch the app\n/price — Current TON price & APY\n/apy — Detailed staking stats\n/alert — Set a price or APY alert\n/alerts — List your active alerts\n/stop — Disable all your alerts\n/ask \\[question\\] — Ask TonSenseAI anything\n/help — Show this message`,
+    `🤖 *TonSense Commands*\n\n/start — Launch the app\n/price — Current TON price & APY\n/apy — Detailed staking stats\n/alert — Set a price or APY alert\n/alerts — List your active alerts\n/stop — Disable all your alerts\n/ask \\[question\\] — Ask TonSenseAI anything\n/support — Get help & support links\n/help — Show this message`,
     { parse_mode: "Markdown", reply_markup: openAppKeyboard() }
   );
 });
@@ -257,6 +257,25 @@ bot.onText(/\/stop/, (msg) => {
   bot.sendMessage(chatId, "🔕 All alerts disabled. Use /alert to set new ones.", {
     parse_mode: "Markdown",
   });
+});
+
+// ── /support ──────────────────────────────────────────────────────────────────
+
+bot.onText(/\/support/, (msg) => {
+  bot.sendMessage(msg.chat.id,
+    "🆘 *TonSense Support*\n\n" +
+    "📢 Channel: @TonSense\\_official\n" +
+    "💬 Support chat: https://t.me/+ls8wv93nO9swYjli\n\n" +
+    "Describe your issue in the support chat and we'll help ASAP! 🚀",
+    {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "💬 Open Support Chat", url: "https://t.me/+ls8wv93nO9swYjli" }
+        ]]
+      }
+    }
+  );
 });
 
 // ── /ask ──────────────────────────────────────────────────────────────────────

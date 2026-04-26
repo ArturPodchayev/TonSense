@@ -321,6 +321,33 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* 5. Support & Community */}
+      <div className="rounded-2xl overflow-hidden" style={glass}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Support &amp; Community
+          </p>
+        </div>
+        {[
+          { icon: "📢", label: "TonSense Channel",  url: "https://t.me/TonSense_official"        },
+          { icon: "💬", label: "Support Chat",       url: "https://t.me/+ls8wv93nO9swYjli"       },
+          { icon: "🤖", label: "Telegram Bot",       url: "https://t.me/Ton_Sense_bot"           },
+        ].map(({ icon, label, url }, idx, arr) => (
+          <button
+            key={label}
+            className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
+            style={idx < arr.length - 1 ? { borderBottom: "1px solid rgba(255,255,255,0.04)" } : {}}
+            onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          >
+            <span style={{ fontSize: 18 }}>{icon}</span>
+            <span className="flex-1 text-sm font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>{label}</span>
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 14 }}>›</span>
+          </button>
+        ))}
+      </div>
+
     </div>
   );
 }

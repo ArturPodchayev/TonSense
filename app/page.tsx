@@ -39,6 +39,43 @@ export default function Home() {
               </span>
             </div>
             <WalletButton />
+            <div className="flex items-center gap-1.5">
+              <a
+                href="https://t.me/TonSense_official"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center transition-colors"
+                style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.6)",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.913l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.963.646z"/>
+                </svg>
+              </a>
+              <a
+                href="https://t.me/+ls8wv93nO9swYjli"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center transition-colors"
+                style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.6)",
+                  fontWeight: 700, fontSize: 14,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+              >
+                ?
+              </a>
+            </div>
           </div>
 
           {/* Center: badge + tagline */}
