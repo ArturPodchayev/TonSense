@@ -181,9 +181,10 @@ async function handleAlerts(chatId: number) {
       return;
     }
 
-    const list = active.map((a: Alert) =>
-      `🔔 TON ${a.type} ${a.direction} $${a.threshold}`
-    ).join("\n");
+    const list = active.map((a: Alert) => {
+      if (a.type === "apy") return `🔔 APY ${a.direction} ${a.threshold}%`;
+      return `🔔 TON price ${a.direction} $${a.threshold}`;
+    }).join("\n");
 
     await sendMessage(chatId, `📋 Your active alerts:\n\n${list}`, { parse_mode: undefined });
   } catch (error) {
@@ -193,19 +194,9 @@ async function handleAlerts(chatId: number) {
 }
 
 async function handleStop(chatId: number) {
-  try {
-    await Promise.all([
-      redis.del(`alerts:${chatId}`),
-      redis.del(`pending:${chatId}`),
-    ]);
-  } catch {
-    // ignore KV errors
-  }
-  await sendMessage(
-    chatId,
-    "🔕 All alerts disabled\\.\n\nUse /alert to set new ones\\.",
-    { reply_markup: openAppKeyboard }
-  );
+  await redis.del(`alerts:${chatId}`);
+  await redis.del(`pending:${chatId}`);
+  await sendMessage(chatId, "🔕 All alerts disabled. Use /alert to set new ones.", { parse_mode: undefined });
 }
 
 async function handleSupport(chatId: number) {
@@ -276,6 +267,7 @@ export async function POST(req: NextRequest) {
       if (callbackData === "alert_price_below") await handleAlertType(callbackChatId, "price", "below");
       if (callbackData === "alert_apy_below")   await handleAlertType(callbackChatId, "apy", "below");
       if (callbackData === "alert_cancel")      await sendMessage(callbackChatId, "❌ Alert setup cancelled\\.");
+      if (callbackData === "view_alerts")       await handleAlerts(callbackChatId);
       return NextResponse.json({ ok: true });
     }
 
@@ -297,7 +289,16 @@ export async function POST(req: NextRequest) {
 
         await redis.del(`pending:${chatId}`);
         await sendMessage(chatId,
-          `✅ Alert set\\! I'll notify you when TON ${esc(type)} ${esc(direction)} \\$${esc(threshold)}\\.`
+          `✅ Alert set! I'll notify you when TON ${type} ${direction} $${threshold}.`,
+          {
+            parse_mode: undefined,
+            reply_markup: {
+              inline_keyboard: [[
+                { text: "📋 View My Alerts", callback_data: "view_alerts" },
+                { text: "🚀 Open App", url: "https://ton-sense.vercel.app" },
+              ]],
+            },
+          }
         );
       } else {
         await sendMessage(chatId, "Please enter a valid number\\. Example: 2\\.50");
