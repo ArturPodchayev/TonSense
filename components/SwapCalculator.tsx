@@ -300,27 +300,18 @@ export default function SwapCalculator() {
         </div>
 
         {/* ── From card ─────────────────────────────────────────────────────── */}
-        <div className="rounded-2xl p-4" style={glass}>
-          <div className="flex justify-between items-center mb-3">
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>You send</span>
-            {showFromBalance && (
-              <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>
-                Balance: {tonBalance!.toFixed(2)} TON
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* From token selector */}
+        <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
+          {/* Single row: token selector left, amount input right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => { setFromDropOpen(v => !v); setToDropOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 112 }}
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
               >
                 <span style={{ fontSize: 18 }}>{fromToken.logo}</span>
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{fromToken.symbol}</span>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: "auto" }}>▾</span>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
               </button>
 
               {fromDropOpen && (
@@ -355,36 +346,50 @@ export default function SwapCalculator() {
               )}
             </div>
 
-            {/* Amount input */}
             <input
               type="number"
-              className="flex-1 bg-transparent outline-none text-right font-bold"
-              style={{ color: "#fff", fontSize: 26 }}
               placeholder="0"
               min="0"
               value={fromAmt}
               onChange={e => setFromAmt(e.target.value)}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                textAlign: "right",
+                fontSize: 24,
+                fontWeight: 700,
+                color: "#fff",
+              }}
             />
           </div>
 
-          {/* Presets (25 / 50 / 75 / MAX) */}
           {showFromBalance && (
-            <div className="flex gap-2 mt-3">
-              {([25, 50, 75, 100] as const).map(pct => (
-                <button
-                  key={pct}
-                  onClick={() => applyPreset(pct)}
-                  className="flex-1 py-1 rounded-lg text-xs font-medium transition-colors"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                >
-                  {pct === 100 ? "MAX" : `${pct}%`}
-                </button>
-              ))}
+            <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+              Balance: {tonBalance!.toFixed(2)} TON
             </div>
           )}
         </div>
+
+        {/* ── Presets ───────────────────────────────────────────────────────── */}
+        {showFromBalance && (
+          <div className="flex gap-2">
+            {([25, 50, 75, 100] as const).map(pct => (
+              <button
+                key={pct}
+                onClick={() => applyPreset(pct)}
+                className="flex-1 py-1 rounded-lg text-xs font-medium transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+              >
+                {pct === 100 ? "MAX" : `${pct}%`}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ── Flip button ───────────────────────────────────────────────────── */}
         <div className="flex justify-center">
@@ -406,28 +411,18 @@ export default function SwapCalculator() {
         </div>
 
         {/* ── To card ───────────────────────────────────────────────────────── */}
-        <div className="rounded-2xl p-4" style={glass}>
-          <div className="flex justify-between items-center mb-3">
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>You receive</span>
-            {simState === "loading" && (
-              <span className="flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>
-                <span className="w-3 h-3 border border-white/30 border-t-white/70 rounded-full animate-spin inline-block" />
-                fetching rate…
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* To token selector */}
+        <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
+          {/* Single row: token selector left, amount display right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => { setToDropOpen(v => !v); setFromDropOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 112 }}
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
               >
                 <span style={{ fontSize: 18 }}>{toToken.logo}</span>
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{toToken.symbol}</span>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: "auto" }}>▾</span>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
               </button>
 
               {toDropOpen && (
@@ -462,15 +457,25 @@ export default function SwapCalculator() {
               )}
             </div>
 
-            {/* Output (read-only) */}
-            <div className="flex-1 text-right">
-              <div style={{ fontSize: 26, fontWeight: 700, color: simState === "ready" ? "#22C55E" : "rgba(255,255,255,0.2)" }}>
-                {toAmt || "0"}
-              </div>
-              {toUsd && simState === "ready" && (
-                <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 2 }}>{toUsd}</div>
-              )}
+            <div style={{
+              flex: 1,
+              minWidth: 0,
+              textAlign: "right",
+              fontSize: 24,
+              fontWeight: 700,
+              color: simState === "ready" ? "#22C55E" : "rgba(255,255,255,0.2)",
+            }}>
+              {toAmt || "0"}
             </div>
+          </div>
+
+          <div style={{ marginTop: 6, minHeight: 16, fontSize: 11, color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", gap: 4 }}>
+            {simState === "loading" ? (
+              <>
+                <span className="w-3 h-3 border border-white/30 border-t-white/70 rounded-full animate-spin inline-block" />
+                fetching rate…
+              </>
+            ) : (toUsd && simState === "ready") ? toUsd : null}
           </div>
         </div>
 
