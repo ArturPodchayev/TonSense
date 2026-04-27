@@ -1,3 +1,4 @@
+// Local development only — production uses webhook at app/api/bot/route.ts
 import dotenv from "dotenv";
 dotenv.config();
 
