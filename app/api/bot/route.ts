@@ -161,33 +161,34 @@ async function handleAlertType(chatId: number, type: "price" | "apy", direction:
 
 async function handleAlerts(chatId: number) {
   try {
-    const rawAlerts = await redis.lrange<string>(`alerts:${chatId}`, 0, -1);
-    const active = rawAlerts
-      .map(a => JSON.parse(a) as Alert)
-      .filter(a => a.active);
+    console.log("Fetching alerts for chatId:", chatId);
+    const alerts = await redis.lrange(`alerts:${chatId}`, 0, -1);
+    console.log("Raw alerts from Redis:", alerts);
+
+    if (!alerts || alerts.length === 0) {
+      await sendMessage(chatId, "📋 No active alerts\\. Use /alert to set one\\.");
+      return;
+    }
+
+    const parsed = alerts.map(a => typeof a === "string" ? JSON.parse(a) : a);
+    console.log("Parsed alerts:", parsed);
+
+    const active = parsed.filter((a: Alert) => a.active === true);
+    console.log("Active alerts:", active);
 
     if (active.length === 0) {
-      await sendMessage(
-        chatId,
-        "📋 No active alerts\\. Use /alert to set one\\.",
-        { reply_markup: openAppKeyboard }
-      );
-    } else {
-      const list = active
-        .map(a => `🔔 ${a.type === "price" ? "TON price" : "APY"} ${a.direction} ${a.type === "price" ? "$" : ""}${a.threshold}${a.type === "apy" ? "%" : ""}`)
-        .join("\n");
-      await sendMessage(
-        chatId,
-        `📋 *Your Active Alerts:*\n\n${esc(list)}`,
-        { reply_markup: openAppKeyboard }
-      );
+      await sendMessage(chatId, "📋 No active alerts\\. Use /alert to set one\\.");
+      return;
     }
-  } catch {
-    await sendMessage(
-      chatId,
-      "📋 No active alerts\\. Use /alert to set one\\.",
-      { reply_markup: openAppKeyboard }
-    );
+
+    const list = active.map((a: Alert) =>
+      `🔔 TON ${a.type} ${a.direction} \\$${a.threshold}`
+    ).join("\n");
+
+    await sendMessage(chatId, `📋 *Your active alerts:*\n\n${list}`);
+  } catch (error) {
+    console.error("handleAlerts error:", error);
+    await sendMessage(chatId, "⚠️ Error fetching alerts\\. Try again\\.");
   }
 }
 
