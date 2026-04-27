@@ -279,25 +279,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Pending alert: user is typing a threshold number
-    if (text && !text.startsWith("/")) {
-      const pending = await redis.get<string>(`pending:${chatId}`);
-      if (pending) {
-        const threshold = parseFloat(text);
-        if (!isNaN(threshold)) {
-          const [type, direction] = pending.split("_") as ["price" | "apy", "above" | "below"];
-          const alert: Alert = { chatId, type, direction, threshold, active: true, createdAt: Date.now() };
-          await redis.lpush(`alerts:${chatId}`, JSON.stringify(alert));
-          await redis.del(`pending:${chatId}`);
-          const label = `${type === "price" ? "TON price" : "APY"} ${direction} ${type === "price" ? "$" : ""}${threshold}${type === "apy" ? "%" : ""}`;
-          await sendMessage(
-            chatId,
-            `✅ Alert set\\! I'll notify you when ${esc(label)}\\.\n\nUse /alerts to view your active alerts\\.`
-          );
-        } else {
-          await sendMessage(chatId, "Please enter a valid number\\. Example: 2\\.50");
-        }
-        return NextResponse.json({ ok: true });
+    const pending = await redis.get(`pending:${chatId}`);
+    console.log("Pending alert for chatId:", chatId, "value:", pending);
+
+    if (pending && !text.startsWith("/")) {
+      const threshold = parseFloat(text);
+      console.log("Parsed threshold:", threshold, "isNaN:", isNaN(threshold));
+
+      if (!isNaN(threshold)) {
+        const [type, direction] = (pending as string).split("_");
+        console.log("Saving alert:", { chatId, type, direction, threshold });
+
+        const alert: Alert = { chatId, type: type as Alert["type"], direction: direction as Alert["direction"], threshold, active: true, createdAt: Date.now() };
+        await redis.lpush(`alerts:${chatId}`, JSON.stringify(alert));
+        console.log("Alert saved directly to Redis");
+
+        await redis.del(`pending:${chatId}`);
+        await sendMessage(chatId,
+          `✅ Alert set\\! I'll notify you when TON ${esc(type)} ${esc(direction)} \\$${esc(threshold)}\\.`
+        );
+      } else {
+        await sendMessage(chatId, "Please enter a valid number\\. Example: 2\\.50");
       }
+      return NextResponse.json({ ok: true });
     }
 
     // Commands
