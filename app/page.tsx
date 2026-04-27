@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import LiveStats from "@/components/LiveStats";
 import WhatIfCalculator from "@/components/WhatIfCalculator";
 import FutureROICalculator from "@/components/FutureROICalculator";
@@ -34,7 +35,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4 overflow-hidden">
             {/* Left: logo */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <img src="/logo.png" alt="TonSense" width={36} height={36} style={{ borderRadius: "8px" }} />
+              <Image src="/logo.png" alt="TonSense" width={36} height={36} style={{ borderRadius: "8px" }} unoptimized />
               <span className="text-xl sm:text-3xl font-black tracking-tight text-white">
                 Ton<span className="text-[#0098EA]">Sense</span>
               </span>
