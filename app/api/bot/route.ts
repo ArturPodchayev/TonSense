@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL!,
+  token: process.env.KV_REST_API_TOKEN!,
+});
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN!;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const WEBAPP_URL = "https://ton-sense.vercel.app";
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+interface Alert {
+  chatId: number;
+  type: "price" | "apy";
+  direction: "above" | "below";
+  threshold: number;
+  active: boolean;
+  createdAt: number;
+}
 
 function esc(s: string | number): string {
   return String(s).replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
@@ -115,19 +130,76 @@ async function handleAlertMenu(chatId: number) {
   await sendMessage(
     chatId,
     "🔔 *Smart Alerts*\n\nChoose what to track and I'll notify you when your target is hit:",
-    { reply_markup: openAppKeyboard }
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "💰 Price above", callback_data: "alert_price_above" },
+            { text: "💰 Price below", callback_data: "alert_price_below" },
+          ],
+          [
+            { text: "📈 APY above", callback_data: "alert_apy_above" },
+            { text: "📈 APY below", callback_data: "alert_apy_below" },
+          ],
+        ],
+      },
+    }
+  );
+}
+
+async function handleAlertType(chatId: number, callbackData: string) {
+  await redis.set(`pending:${chatId}`, callbackData, { ex: 300 });
+  const isPrice = callbackData.includes("price");
+  const direction = callbackData.includes("above") ? "above" : "below";
+  const label = `${isPrice ? "TON price" : "staking APY"} ${direction}`;
+  const example = isPrice ? "2\\.50" : "4\\.5";
+  await sendMessage(
+    chatId,
+    `Enter the target value for *${esc(label)}*:\n\nExample: ${example}`
   );
 }
 
 async function handleAlerts(chatId: number) {
-  await sendMessage(
-    chatId,
-    "📋 *Your Active Alerts*\n\nAlert functionality coming soon\\! 🚀\n\nIn the meantime, check live prices with /price",
-    { reply_markup: openAppKeyboard }
-  );
+  try {
+    const rawAlerts = await redis.lrange<string>(`alerts:${chatId}`, 0, -1);
+    const active = rawAlerts
+      .map(a => JSON.parse(a) as Alert)
+      .filter(a => a.active);
+
+    if (active.length === 0) {
+      await sendMessage(
+        chatId,
+        "📋 No active alerts\\. Use /alert to set one\\.",
+        { reply_markup: openAppKeyboard }
+      );
+    } else {
+      const list = active
+        .map(a => `🔔 ${a.type === "price" ? "TON price" : "APY"} ${a.direction} ${a.type === "price" ? "$" : ""}${a.threshold}${a.type === "apy" ? "%" : ""}`)
+        .join("\n");
+      await sendMessage(
+        chatId,
+        `📋 *Your Active Alerts:*\n\n${esc(list)}`,
+        { reply_markup: openAppKeyboard }
+      );
+    }
+  } catch {
+    await sendMessage(
+      chatId,
+      "📋 No active alerts\\. Use /alert to set one\\.",
+      { reply_markup: openAppKeyboard }
+    );
+  }
 }
 
 async function handleStop(chatId: number) {
+  try {
+    await Promise.all([
+      redis.del(`alerts:${chatId}`),
+      redis.del(`pending:${chatId}`),
+    ]);
+  } catch {
+    // ignore KV errors
+  }
   await sendMessage(
     chatId,
     "🔕 All alerts disabled\\.\n\nUse /alert to set new ones\\.",
@@ -202,6 +274,32 @@ export async function POST(req: NextRequest) {
     if (callbackData === "alert_menu") {
       await handleAlertMenu(chatId);
       return NextResponse.json({ ok: true });
+    }
+    if (callbackData?.startsWith("alert_")) {
+      await handleAlertType(chatId, callbackData);
+      return NextResponse.json({ ok: true });
+    }
+
+    // Pending alert: user is typing a threshold number
+    if (text && !text.startsWith("/")) {
+      const pending = await redis.get<string>(`pending:${chatId}`);
+      if (pending) {
+        const threshold = parseFloat(text);
+        if (!isNaN(threshold)) {
+          const [, type, direction] = pending.split("_") as ["alert", "price" | "apy", "above" | "below"];
+          const alert: Alert = { chatId, type, direction, threshold, active: true, createdAt: Date.now() };
+          await redis.lpush(`alerts:${chatId}`, JSON.stringify(alert));
+          await redis.del(`pending:${chatId}`);
+          const label = `${type === "price" ? "TON price" : "APY"} ${direction} ${type === "price" ? "$" : ""}${threshold}${type === "apy" ? "%" : ""}`;
+          await sendMessage(
+            chatId,
+            `✅ Alert set\\! I'll notify you when ${esc(label)}\\.\n\nUse /alerts to view your active alerts\\.`
+          );
+        } else {
+          await sendMessage(chatId, "Please enter a valid number\\. Example: 2\\.50");
+        }
+        return NextResponse.json({ ok: true });
+      }
     }
 
     // Commands
