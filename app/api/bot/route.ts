@@ -5,13 +5,17 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const WEBAPP_URL = "https://ton-sense.vercel.app";
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+function esc(s: string | number): string {
+  return String(s).replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
+}
+
 // ── Telegram helpers ──────────────────────────────────────────────────────────
 
 async function sendMessage(chatId: number, text: string, extra?: object) {
   await fetch(`${API}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "Markdown", ...extra }),
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "MarkdownV2", ...extra }),
   });
 }
 
@@ -62,7 +66,7 @@ async function askDeepSeek(system: string, user: string): Promise<string> {
 async function handleStart(chatId: number) {
   await sendMessage(
     chatId,
-    "👋 *Welcome to TonSense!*\n\n💎 Your AI-powered TON DeFi advisor.\n\n📈 Calculate staking returns\n🤖 Ask AI about TON DeFi\n⚡ Swap & stake directly\n\nUse the menu below or type a command:",
+    "👋 *Welcome to TonSense\\!*\n\n💎 Your AI\\-powered TON DeFi advisor\\.\n\n📈 Calculate staking returns\n🤖 Ask AI about TON DeFi\n⚡ Swap & stake directly\n\nUse the menu below or type a command:",
     {
       reply_markup: {
         inline_keyboard: [
@@ -84,11 +88,11 @@ async function handlePrice(chatId: number) {
     const yearlyTon = (100 * apy) / 100;
     await sendMessage(
       chatId,
-      `💎 *TON Price*\n\n*$${price.toFixed(4)}*\n${arrow} ${Math.abs(change24h).toFixed(2)}% (24h)\n\nStaking APY: *${apy.toFixed(1)}%* (tsTON)\nIf you stake 100 TON today → *+${yearlyTon.toFixed(2)} TON/year*\n\n🔔 /alert — set a price notification`,
+      `💎 *TON Price*\n\n*$${esc(price.toFixed(4))}*\n${arrow} ${esc(Math.abs(change24h).toFixed(2))}% \\(24h\\)\n\nStaking APY: *${esc(apy.toFixed(1))}%* \\(tsTON\\)\nIf you stake 100 TON today → *\\+${esc(yearlyTon.toFixed(2))} TON/year*\n\n🔔 /alert — set a price notification`,
       { reply_markup: openAppKeyboard }
     );
   } catch {
-    await sendMessage(chatId, "⚠️ Could not fetch price. Try again later.");
+    await sendMessage(chatId, "⚠️ Could not fetch price\\. Try again later\\.");
   }
 }
 
@@ -99,18 +103,18 @@ async function handleApy(chatId: number) {
     const yearlyTon  = (100 * apy) / 100;
     await sendMessage(
       chatId,
-      `📈 *tsTON Staking APY*\n\nCurrent: *${apy.toFixed(1)}% annual*\nProvider: Tonstakers\n\nMonthly per 100 TON: *+${monthlyTon.toFixed(2)} TON* ($${(monthlyTon * price).toFixed(2)})\nYearly per 100 TON: *+${yearlyTon.toFixed(2)} TON* ($${(yearlyTon * price).toFixed(2)})\n\n💡 /ask What is the best time to stake TON?`,
+      `📈 *tsTON Staking APY*\n\nCurrent: *${esc(apy.toFixed(1))}% annual*\nProvider: Tonstakers\n\nMonthly per 100 TON: *\\+${esc(monthlyTon.toFixed(2))} TON* \\($${esc((monthlyTon * price).toFixed(2))}\\)\nYearly per 100 TON: *\\+${esc(yearlyTon.toFixed(2))} TON* \\($${esc((yearlyTon * price).toFixed(2))}\\)\n\n💡 /ask What is the best time to stake TON?`,
       { reply_markup: openAppKeyboard }
     );
   } catch {
-    await sendMessage(chatId, "⚠️ Could not fetch APY. Try again later.");
+    await sendMessage(chatId, "⚠️ Could not fetch APY\\. Try again later\\.");
   }
 }
 
 async function handleAlertMenu(chatId: number) {
   await sendMessage(
     chatId,
-    "🔔 *Smart Alerts*\n\nAlert functionality requires a persistent server.\n\n👉 For real-time price & APY alerts, use the Telegram bot running on Railway:\n[@Ton\\_Sense\\_bot](https://t.me/Ton_Sense_bot)",
+    "🔔 *Smart Alerts*\n\nChoose what to track and I'll notify you when your target is hit:",
     { reply_markup: openAppKeyboard }
   );
 }
@@ -118,7 +122,7 @@ async function handleAlertMenu(chatId: number) {
 async function handleAlerts(chatId: number) {
   await sendMessage(
     chatId,
-    "🔔 Alerts are managed by the dedicated bot.\n\n👉 Use [@Ton\\_Sense\\_bot](https://t.me/Ton_Sense_bot) to set and view price/APY alerts.",
+    "📋 *Your Active Alerts*\n\nAlert functionality coming soon\\! 🚀\n\nIn the meantime, check live prices with /price",
     { reply_markup: openAppKeyboard }
   );
 }
@@ -126,7 +130,7 @@ async function handleAlerts(chatId: number) {
 async function handleStop(chatId: number) {
   await sendMessage(
     chatId,
-    "🔕 To manage or stop alerts, use [@Ton\\_Sense\\_bot](https://t.me/Ton_Sense_bot).",
+    "🔕 All alerts disabled\\.\n\nUse /alert to set new ones\\.",
     { reply_markup: openAppKeyboard }
   );
 }
@@ -134,7 +138,7 @@ async function handleStop(chatId: number) {
 async function handleSupport(chatId: number) {
   await sendMessage(
     chatId,
-    "🆘 *TonSense Support*\n\n📢 Channel: @TonSense\\_official\n💬 Support chat: https://t.me/+ls8wv93nO9swYjli\n\nDescribe your issue in the support chat and we'll help ASAP! 🚀",
+    "🆘 *TonSense Support*\n\n📢 Channel: @TonSense\\_official\n💬 [Support Chat](https://t.me/+ls8wv93nO9swYjli)\n\nDescribe your issue and we'll help ASAP\\! 🚀",
     {
       reply_markup: {
         inline_keyboard: [[
@@ -155,7 +159,7 @@ async function handleHelp(chatId: number) {
 
 async function handleAsk(chatId: number, question: string) {
   if (!question.trim()) {
-    await sendMessage(chatId, "Please provide a question. Example: /ask What is tsTON?");
+    await sendMessage(chatId, "Please provide a question\\. Example: /ask What is tsTON?");
     return;
   }
   try {
@@ -166,12 +170,15 @@ async function handleAsk(chatId: number, question: string) {
       "You have deep knowledge of Tonstakers, tsTON liquid staking, Ston.fi DEX, DeDust, " +
       "the Jetton token standard, TON Connect, and TON wallets. " +
       "Give concise, accurate answers in 3-4 sentences max. " +
-      "Use Telegram markdown (*bold*, _italic_). No markdown headers.\n\n" +
+      "Respond in plain text only, no markdown formatting.\n\n" +
       `Live market data:\n- TON price: $${price.toFixed(4)} (${sign}${change24h.toFixed(2)}% 24h)\n- tsTON staking APY: ${apy.toFixed(1)}%`;
     const answer = await askDeepSeek(system, question);
-    await sendMessage(chatId, `🤖 *TonSenseAI*\n\n${answer}`, { reply_markup: openAppKeyboard });
+    await sendMessage(chatId, `🤖 *TonSenseAI*\n\n${esc(answer)}`, { reply_markup: openAppKeyboard });
   } catch {
-    await sendMessage(chatId, "⚠️ AI is unavailable right now. Try again later.");
+    await sendMessage(
+      chatId,
+      "🤖 AI is temporarily unavailable\\.\n\nTop up DeepSeek balance to restore AI responses\\.\nIn the meantime, ask me /price or /apy\\!"
+    );
   }
 }
 
@@ -210,7 +217,7 @@ export async function POST(req: NextRequest) {
     else if (text.startsWith("/ask"))     await handleAsk(chatId, text.slice(4).trim());
     else if (text && !text.startsWith("/")) {
       await sendMessage(chatId,
-        "🤖 I didn't get that. Try /help or just ask me anything about TON DeFi!",
+        "🤖 I didn't get that\\. Try /help or just ask me anything about TON DeFi\\!",
         { reply_markup: openAppKeyboard }
       );
     }
