@@ -46,17 +46,6 @@ export default function WalletButton() {
             <span className="text-white/50 text-xs">Balance</span>
             <span className="text-[#0098EA] font-bold">{balance.toFixed(2)} TON</span>
           </div>
-          {/* Mobile - compact */}
-          <div
-            className="sm:hidden flex items-center min-w-0 px-2 py-1 rounded-lg"
-            style={{
-              background: "rgba(0,152,234,0.1)",
-              border: "1px solid rgba(0,152,234,0.2)",
-              fontSize: 11,
-            }}
-          >
-            <span className="text-[#0098EA] font-bold truncate max-w-[72px]">{balance.toFixed(2)} TON</span>
-          </div>
         </>
       )}
       <TonConnectButton />

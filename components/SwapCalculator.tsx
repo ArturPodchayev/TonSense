@@ -310,9 +310,9 @@ export default function SwapCalculator() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* From token selector */}
-            <div className="relative" onClick={e => e.stopPropagation()}>
+            <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => { setFromDropOpen(v => !v); setToDropOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
@@ -417,9 +417,9 @@ export default function SwapCalculator() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* To token selector */}
-            <div className="relative" onClick={e => e.stopPropagation()}>
+            <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => { setToDropOpen(v => !v); setFromDropOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"

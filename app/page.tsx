@@ -31,10 +31,10 @@ export default function Home() {
         {/* Header */}
         <div className="mb-8">
           {/* Top row: logo left, wallet right */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 overflow-hidden">
             {/* Left: logo */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <img src="/logo.png" alt="TonSense" className="w-7 h-7 sm:w-9 sm:h-9 object-contain" />
+              <img src="/logo.png" alt="TonSense" width={36} height={36} style={{ borderRadius: "8px" }} />
               <span className="text-xl sm:text-3xl font-black tracking-tight text-white">
                 Ton<span className="text-[#0098EA]">Sense</span>
               </span>
