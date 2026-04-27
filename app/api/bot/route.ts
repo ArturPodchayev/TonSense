@@ -134,12 +134,14 @@ async function handleAlertMenu(chatId: number) {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: "💰 Price above", callback_data: "alert_price_above" },
-            { text: "💰 Price below", callback_data: "alert_price_below" },
+            { text: "📈 TON Price ↑ Above", callback_data: "alert_price_above" },
+            { text: "📉 TON Price ↓ Below", callback_data: "alert_price_below" },
           ],
           [
-            { text: "📈 APY above", callback_data: "alert_apy_above" },
-            { text: "📈 APY below", callback_data: "alert_apy_below" },
+            { text: "📊 APY ↓ Below", callback_data: "alert_apy_below" },
+          ],
+          [
+            { text: "❌ Cancel", callback_data: "alert_cancel" },
           ],
         ],
       },
@@ -147,12 +149,10 @@ async function handleAlertMenu(chatId: number) {
   );
 }
 
-async function handleAlertType(chatId: number, callbackData: string) {
-  await redis.set(`pending:${chatId}`, callbackData, { ex: 300 });
-  const isPrice = callbackData.includes("price");
-  const direction = callbackData.includes("above") ? "above" : "below";
-  const label = `${isPrice ? "TON price" : "staking APY"} ${direction}`;
-  const example = isPrice ? "2\\.50" : "4\\.5";
+async function handleAlertType(chatId: number, type: "price" | "apy", direction: "above" | "below") {
+  await redis.set(`pending:${chatId}`, `${type}_${direction}`, { ex: 300 });
+  const label = `${type === "price" ? "TON price" : "staking APY"} ${direction}`;
+  const example = type === "price" ? "2\\.50" : "4\\.5";
   await sendMessage(
     chatId,
     `Enter the target value for *${esc(label)}*:\n\nExample: ${example}`
@@ -267,16 +267,14 @@ export async function POST(req: NextRequest) {
     if (!chatId) return NextResponse.json({ ok: true });
 
     // Callback queries
-    if (callbackData === "price") {
-      await handlePrice(chatId);
-      return NextResponse.json({ ok: true });
-    }
-    if (callbackData === "alert_menu") {
-      await handleAlertMenu(chatId);
-      return NextResponse.json({ ok: true });
-    }
-    if (callbackData?.startsWith("alert_")) {
-      await handleAlertType(chatId, callbackData);
+    const callbackChatId = update.callback_query?.message?.chat?.id;
+    if (callbackData && callbackChatId) {
+      if (callbackData === "price")             await handlePrice(callbackChatId);
+      if (callbackData === "alert_menu")        await handleAlertMenu(callbackChatId);
+      if (callbackData === "alert_price_above") await handleAlertType(callbackChatId, "price", "above");
+      if (callbackData === "alert_price_below") await handleAlertType(callbackChatId, "price", "below");
+      if (callbackData === "alert_apy_below")   await handleAlertType(callbackChatId, "apy", "below");
+      if (callbackData === "alert_cancel")      await sendMessage(callbackChatId, "❌ Alert setup cancelled\\.");
       return NextResponse.json({ ok: true });
     }
 
@@ -286,7 +284,7 @@ export async function POST(req: NextRequest) {
       if (pending) {
         const threshold = parseFloat(text);
         if (!isNaN(threshold)) {
-          const [, type, direction] = pending.split("_") as ["alert", "price" | "apy", "above" | "below"];
+          const [type, direction] = pending.split("_") as ["price" | "apy", "above" | "below"];
           const alert: Alert = { chatId, type, direction, threshold, active: true, createdAt: Date.now() };
           await redis.lpush(`alerts:${chatId}`, JSON.stringify(alert));
           await redis.del(`pending:${chatId}`);
