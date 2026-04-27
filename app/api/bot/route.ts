@@ -166,7 +166,7 @@ async function handleAlerts(chatId: number) {
     console.log("Raw alerts from Redis:", alerts);
 
     if (!alerts || alerts.length === 0) {
-      await sendMessage(chatId, "📋 No active alerts\\. Use /alert to set one\\.");
+      await sendMessage(chatId, "📋 No active alerts. Use /alert to set one.", { parse_mode: undefined });
       return;
     }
 
@@ -177,18 +177,18 @@ async function handleAlerts(chatId: number) {
     console.log("Active alerts:", active);
 
     if (active.length === 0) {
-      await sendMessage(chatId, "📋 No active alerts\\. Use /alert to set one\\.");
+      await sendMessage(chatId, "📋 No active alerts. Use /alert to set one.", { parse_mode: undefined });
       return;
     }
 
     const list = active.map((a: Alert) =>
-      `🔔 TON ${a.type} ${a.direction} \\$${a.threshold}`
+      `🔔 TON ${a.type} ${a.direction} $${a.threshold}`
     ).join("\n");
 
-    await sendMessage(chatId, `📋 *Your active alerts:*\n\n${list}`);
+    await sendMessage(chatId, `📋 Your active alerts:\n\n${list}`, { parse_mode: undefined });
   } catch (error) {
     console.error("handleAlerts error:", error);
-    await sendMessage(chatId, "⚠️ Error fetching alerts\\. Try again\\.");
+    await sendMessage(chatId, "⚠️ Error fetching alerts. Try again.", { parse_mode: undefined });
   }
 }
 
