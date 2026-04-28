@@ -105,6 +105,16 @@ export default function WhatIfCalculator() {
     }
   }, [results]);
 
+  const handleShareTelegram = useCallback(() => {
+    if (!results) return;
+    const absDiff = Math.abs(results.diff).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const text = results.diff >= 0
+      ? `I would have earned +$${absDiff} more by staking ${results.tonAmount} TON ${results.days} days ago! 💎 Calculate yours on TonSense`
+      : `TON staking still beats just holding! Calculate your potential returns 💎`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent("https://ton-sense.vercel.app")}&text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  }, [results]);
+
   function calculate() {
     const ton = parseFloat(amount);
     if (!ton || ton <= 0 || history.length === 0) return;
@@ -300,29 +310,46 @@ export default function WhatIfCalculator() {
             </a>
           </div>
 
-          {/* Share button */}
-          <button
-            onClick={handleShare}
-            disabled={sharing}
-            className="w-full rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backdropFilter: "blur(12px)",
-              background: "rgba(124,58,237,0.15)",
-              border: "1px solid rgba(124,58,237,0.3)",
-              color: "rgba(255,255,255,0.8)",
-            }}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.boxShadow = "0 0 24px rgba(124,58,237,0.3)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
-          >
-            {sharing ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
-                Generating…
-              </>
-            ) : (
-              "📤 Share Your Result"
-            )}
-          </button>
+          {/* Share buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backdropFilter: "blur(12px)",
+                background: "rgba(124,58,237,0.15)",
+                border: "1px solid rgba(124,58,237,0.3)",
+                color: "rgba(255,255,255,0.8)",
+              }}
+              onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.boxShadow = "0 0 24px rgba(124,58,237,0.3)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+            >
+              {sharing ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                "📤 Share Your Result"
+              )}
+            </button>
+            <button
+              onClick={handleShareTelegram}
+              className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+              style={{
+                background: "linear-gradient(135deg, #0098EA, #229ED9)",
+                color: "#fff",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.913l-2.965-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.963.646z"/>
+              </svg>
+              Share to Telegram
+            </button>
+          </div>
 
           {/* Chart */}
           <div className="rounded-2xl p-5" style={glass}>
