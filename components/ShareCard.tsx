@@ -45,7 +45,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             </span>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#0098EA", display: "inline-block", marginTop: 2 }} />
           </div>
-          <span style={{ fontSize: 12, color: "#6B7280" }}>ton-sense.vercel.app</span>
+          <span style={{ fontSize: 12, color: "#6B7280" }}>tonsense.app</span>
         </div>
 
         {/* Headline */}
@@ -95,7 +95,7 @@ const ShareCard = forwardRef<HTMLDivElement, Props>(
             borderRadius: 8,
             padding: "4px 12px",
           }}>
-            ton-sense.vercel.app
+            tonsense.app
           </span>
         </div>
       </div>

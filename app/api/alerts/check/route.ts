@@ -5,7 +5,7 @@ const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN!,
 });
 
-const WEBAPP_URL = "https://ton-sense.vercel.app";
+const WEBAPP_URL = "https://tonsense.app";
 
 interface Alert {
   chatId: number;

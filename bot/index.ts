@@ -8,7 +8,7 @@ import path from "path";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const WEBAPP_URL = "https://ton-sense.vercel.app";
+const WEBAPP_URL = "https://tonsense.app";
 const ALERTS_FILE = path.join(__dirname, "alerts.json");
 
 if (!BOT_TOKEN) {

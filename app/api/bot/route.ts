@@ -8,7 +8,7 @@ const redis = new Redis({
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN!;
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const WEBAPP_URL = "https://ton-sense.vercel.app";
+const WEBAPP_URL = "https://tonsense.app";
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 interface Alert {
@@ -295,7 +295,7 @@ export async function POST(req: NextRequest) {
             reply_markup: {
               inline_keyboard: [[
                 { text: "📋 View My Alerts", callback_data: "view_alerts" },
-                { text: "🚀 Open App", url: "https://ton-sense.vercel.app" },
+                { text: "🚀 Open App", url: "https://tonsense.app" },
               ]],
             },
           }

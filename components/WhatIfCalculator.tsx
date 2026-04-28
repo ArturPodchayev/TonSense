@@ -111,7 +111,7 @@ export default function WhatIfCalculator() {
     const text = results.diff >= 0
       ? `I would have earned +$${absDiff} more by staking ${results.tonAmount} TON ${results.days} days ago! 💎 Calculate yours on TonSense`
       : `TON staking still beats just holding! Calculate your potential returns 💎`;
-    const url = `https://t.me/share/url?url=${encodeURIComponent("https://ton-sense.vercel.app")}&text=${encodeURIComponent(text)}`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent("https://tonsense.app")}&text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   }, [results]);
 

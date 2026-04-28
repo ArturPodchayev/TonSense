@@ -4,7 +4,7 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black) ![TypeScript](https://img.shields.io/badge/TypeScript-blue) ![TON](https://img.shields.io/badge/TON-Blockchain-0098EA) ![Vercel](https://img.shields.io/badge/Deployed-Vercel-black) ![License](https://img.shields.io/badge/License-MIT-green)
 
-🌐 **Live demo:** [ton-sense.vercel.app](https://ton-sense.vercel.app) &nbsp;|&nbsp; 🤖 **Telegram bot:** [@Ton\_Sense\_bot](https://t.me/Ton_Sense_bot)
+🌐 **Live demo:** [tonsense.app](https://tonsense.app) &nbsp;|&nbsp; 🤖 **Telegram bot:** [@Ton\_Sense\_bot](https://t.me/Ton_Sense_bot)
 
 ---
 
