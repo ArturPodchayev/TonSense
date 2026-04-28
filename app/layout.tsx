@@ -14,9 +14,7 @@ export const metadata: Metadata = {
   title: "TonSense — TON Staking Calculator",
   description: "See what you missed. Plan what's next. AI-powered DeFi analytics for TON blockchain.",
   icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.ico',
   },
   openGraph: {
     title: "TonSense — TON Staking Calculator",
