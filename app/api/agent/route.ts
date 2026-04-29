@@ -10,12 +10,9 @@ export async function POST(req: Request) {
       ? `User wallet: ${walletAddress}${walletBalance != null ? `, balance: ${walletBalance} TON` : ""}.`
       : "No wallet connected.";
 
-    const systemPrompt = `You are an expert TON blockchain DeFi advisor embedded in TonSense. You have deep knowledge of Tonstakers, tsTON liquid staking, Ston.fi DEX, DeDust, the Jetton token standard, TON Connect, and TON wallets. Give concise, accurate answers in 3-4 sentences max. No markdown formatting.
+    const systemPrompt = `TON DeFi analyst. Answer in ≤3 sentences. Lead with numbers when relevant. No filler, no disclaimers, no markdown. Specialties: tsTON/Tonstakers staking, Ston.fi DEX, DeDust, Jetton standard, TON Connect.
 
-Live market data:
-- TON price: $${tonPrice ?? "unknown"} (${sign}${Number(change24h ?? 0).toFixed(2)}% 24h)
-- tsTON staking APY: ${apy ?? "unknown"}%
-- ${walletLine}`;
+Live data: TON $${tonPrice ?? "?"} (${sign}${Number(change24h ?? 0).toFixed(2)}% 24h) | APY ${apy ?? "?"}% | ${walletLine}`;
 
     const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
