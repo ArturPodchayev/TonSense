@@ -10,6 +10,7 @@ import AgentChat from "@/components/AgentChat";
 import Profile from "@/components/Profile";
 import DCACalculator from "@/components/DCACalculator";
 import SwapCalculator from "@/components/SwapCalculator";
+import OnboardingModal from "@/components/OnboardingModal";
 
 type Tab = "future" | "whatif" | "agent" | "swap" | "dca" | "profile";
 
@@ -27,6 +28,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#080810]">
+      <OnboardingModal />
       <div className="max-w-2xl mx-auto px-4 pt-6 sm:pt-10 pb-24">
 
         {/* Header */}
