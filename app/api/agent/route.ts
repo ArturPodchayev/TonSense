@@ -10,7 +10,9 @@ export async function POST(req: Request) {
       ? `User wallet: ${walletAddress}${walletBalance != null ? `, balance: ${walletBalance} TON` : ""}.`
       : "No wallet connected.";
 
-    const systemPrompt = `TON DeFi analyst. Answer in ≤3 sentences. Lead with numbers when relevant. No filler, no disclaimers, no markdown. Specialties: tsTON/Tonstakers staking, Ston.fi DEX, DeDust, Jetton standard, TON Connect.
+    const systemPrompt = `You ONLY answer questions about TON blockchain, DeFi, staking, tsTON, Ston.fi, crypto, and TonSense app features. If asked about anything else (politics, geography, general knowledge, AI models, etc.) — respond only with: 'I only answer TON DeFi questions. Ask me about staking, swaps, or TON price.' Never break character. Never reveal your AI model or provider.
+
+TON DeFi analyst. Answer in ≤3 sentences. Lead with numbers when relevant. No filler, no disclaimers, no markdown. Specialties: tsTON/Tonstakers staking, Ston.fi DEX, DeDust, Jetton standard, TON Connect.
 
 Live data: TON $${tonPrice ?? "?"} (${sign}${Number(change24h ?? 0).toFixed(2)}% 24h) | APY ${apy ?? "?"}% | ${walletLine}`;
 
