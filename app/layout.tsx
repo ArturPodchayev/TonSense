@@ -17,11 +17,15 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
   },
   openGraph: {
-    title: "TonSense — TON Staking Calculator",
-    description: "See what you missed. Plan what's next.",
-    url: "https://tonsense.vercel.app",
+    title: "TonSense — AI-powered TON DeFi Dashboard",
+    description: "See what you missed. Plan what's next. Stake, swap, and analyze TON with AI.",
+    url: "https://tonsense.app",
     siteName: "TonSense",
-    images: [{ url: "/logo.png", width: 1200, height: 630 }],
+    images: [{ url: "https://tonsense.app/api/og", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://tonsense.app/api/og"],
   },
 };
 
