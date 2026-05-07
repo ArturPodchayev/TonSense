@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import type { HealthStatus } from "./types";
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -8,13 +9,6 @@ const redis = new Redis({
 const WEBAPP_URL = "https://tonsense.app";
 const REDIS_KEY = "health:status";
 const TTL = 600; // 10 minutes
-
-export interface HealthStatus {
-  timestamp: number;
-  tonPrice: { ok: boolean; value: number | null };
-  stakingApy: { ok: boolean; value: number | null };
-  overall: "ok" | "degraded" | "down";
-}
 
 async function runChecks(): Promise<HealthStatus> {
   const [priceResult, apyResult] = await Promise.allSettled([

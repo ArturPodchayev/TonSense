@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import type { HealthStatus } from "../route";
+import type { HealthStatus } from "../types";
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
