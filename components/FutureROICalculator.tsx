@@ -83,6 +83,7 @@ export default function FutureROICalculator() {
   const [apy, setApy] = useState<number>(18.7);
   const [currentPrice, setCurrentPrice] = useState<number>(1.33);
   const [change24h, setChange24h] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [inTON, setInTON] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -103,6 +104,7 @@ export default function FutureROICalculator() {
       setApy(apyVal);
       setCurrentPrice(priceData.price);
       setChange24h(priceData.change24h);
+      setIsLoading(false);
     });
   }, []);
 
@@ -267,9 +269,13 @@ export default function FutureROICalculator() {
               Annual Percentage Yield — your yearly earnings rate
             </span>
           </div>
-          <span className="text-base font-bold flex-shrink-0" style={{ color: "#22C55E" }}>
-            {apy.toFixed(1)}%
-          </span>
+          {isLoading ? (
+            <div className="h-6 w-16 rounded-md bg-white/10 animate-pulse flex-shrink-0" />
+          ) : (
+            <span className="text-base font-bold flex-shrink-0" style={{ color: "#22C55E" }}>
+              {apy.toFixed(1)}%
+            </span>
+          )}
         </div>
 
       </div>
