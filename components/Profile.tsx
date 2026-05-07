@@ -12,6 +12,7 @@ function getWalletEmoji(address: string): string {
 import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
 import { useTonBalance } from "@/hooks/useTonBalance";
 import { fetchTonPrice, fetchStakingAPY } from "@/lib/api";
+import FAQ from "@/components/FAQ";
 
 const glass = {
   backdropFilter: "blur(20px)",
@@ -103,20 +104,23 @@ export default function Profile() {
 
   if (!address) {
     return (
-      <div className="rounded-2xl p-10 flex flex-col items-center gap-5 text-center" style={glass}>
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-          style={{ background: "rgba(0,152,234,0.1)", border: "1px solid rgba(0,152,234,0.2)", boxShadow: "0 0 30px rgba(0,152,234,0.15)" }}
-        >
-          👤
+      <div className="space-y-4">
+        <div className="rounded-2xl p-10 flex flex-col items-center gap-5 text-center" style={glass}>
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+            style={{ background: "rgba(0,152,234,0.1)", border: "1px solid rgba(0,152,234,0.2)", boxShadow: "0 0 30px rgba(0,152,234,0.15)" }}
+          >
+            👤
+          </div>
+          <div>
+            <p className="text-white font-semibold mb-1">Connect your wallet to view profile</p>
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+              See your balance, transactions, and portfolio overview
+            </p>
+          </div>
+          <TonConnectButton />
         </div>
-        <div>
-          <p className="text-white font-semibold mb-1">Connect your wallet to view profile</p>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-            See your balance, transactions, and portfolio overview
-          </p>
-        </div>
-        <TonConnectButton />
+        <FAQ />
       </div>
     );
   }
@@ -351,6 +355,9 @@ export default function Profile() {
           </button>
         ))}
       </div>
+
+      {/* 6. FAQ */}
+      <FAQ />
 
     </div>
   );
