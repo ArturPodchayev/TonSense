@@ -11,11 +11,23 @@ const LAST_NOTIFY_KEY = "health:last_notify";
 const NOTIFY_COOLDOWN = 60 * 60 * 1000; // 1 hour in ms
 
 function buildMessage(status: HealthStatus): string {
+  const lines: string[] = [];
+
   const down: string[] = [];
-  if (!status.tonPrice.ok)  down.push("TON Price API");
+  if (!status.tonPrice.ok)   down.push("TON Price API");
   if (!status.stakingApy.ok) down.push("Staking APY API");
-  const service = down.length > 1 ? "all services" : down[0] ?? "an API";
-  return `🚨 TonSense Alert: ${service} is down. Check immediately. tonsense.app`;
+
+  if (down.length > 0) {
+    const service = down.length > 1 ? "all services" : down[0];
+    lines.push(`🚨 TonSense Alert: ${service} is down. Check immediately. tonsense.app`);
+  }
+
+  if (!status.deepseek.ok || (status.deepseek.balance !== null && status.deepseek.balance < 0.5)) {
+    const bal = status.deepseek.balance !== null ? `$${status.deepseek.balance.toFixed(2)}` : "unknown";
+    lines.push(`⚠️ DeepSeek balance low: ${bal}. AI features may stop working. Top up at platform.deepseek.com`);
+  }
+
+  return lines.join("\n\n") || "⚠️ TonSense: service degraded. tonsense.app";
 }
 
 export async function GET(req: Request) {
