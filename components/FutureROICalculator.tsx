@@ -78,6 +78,7 @@ export default function FutureROICalculator() {
   const [debouncedAmount, setDebouncedAmount] = useState<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedPeriods, setSelectedPeriods] = useState<number[]>([1, 3, 12]);
+  const [periodHint, setPeriodHint] = useState(false);
   const walletBalance = useTonBalance();
   const [apy, setApy] = useState<number>(18.7);
   const [currentPrice, setCurrentPrice] = useState<number>(1.33);
@@ -106,6 +107,11 @@ export default function FutureROICalculator() {
   }, []);
 
   function togglePeriod(months: number) {
+    if (!amount || parseFloat(amount) <= 0) {
+      setPeriodHint(true);
+      setTimeout(() => setPeriodHint(false), 3000);
+      return;
+    }
     setSelectedPeriods((prev) =>
       prev.includes(months)
         ? prev.length > 1
@@ -144,14 +150,17 @@ export default function FutureROICalculator() {
       {/* Input card */}
       <div className="rounded-2xl p-6 space-y-5" style={glass}>
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>
             TON Amount to Stake
           </label>
+          <p className="text-[11px] mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>
+            Enter how many TON coins you want to earn rewards on
+          </p>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="e.g. 5000"
+            placeholder="e.g. 100 TON"
             className="w-full rounded-xl px-4 py-3 text-white text-sm font-medium transition-all outline-none placeholder:text-white/20"
             style={{
               background: "rgba(255,255,255,0.04)",
@@ -201,9 +210,12 @@ export default function FutureROICalculator() {
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>
             Forecast Periods
           </label>
+          <p className="text-[11px] mb-3" style={{ color: "rgba(255,255,255,0.25)" }}>
+            We&apos;ll calculate how much you&apos;d earn over this time period
+          </p>
           <div className="flex flex-wrap gap-2">
             {PERIOD_OPTIONS.map((p) => {
               const active = selectedPeriods.includes(p.months);
@@ -236,16 +248,26 @@ export default function FutureROICalculator() {
               );
             })}
           </div>
+          {periodHint && (
+            <p className="text-[11px] mt-2 px-3 py-2 rounded-lg" style={{ background: "rgba(0,152,234,0.08)", border: "1px solid rgba(0,152,234,0.2)", color: "rgba(0,152,234,0.8)" }}>
+              Enter your TON amount above to see results
+            </p>
+          )}
         </div>
 
         <div
           className="flex items-center justify-between rounded-xl px-4 py-3"
           style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Current APY
-          </span>
-          <span className="text-base font-bold" style={{ color: "#22C55E" }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Current APY
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>
+              Annual Percentage Yield — your yearly earnings rate
+            </span>
+          </div>
+          <span className="text-base font-bold flex-shrink-0" style={{ color: "#22C55E" }}>
             {apy.toFixed(1)}%
           </span>
         </div>
