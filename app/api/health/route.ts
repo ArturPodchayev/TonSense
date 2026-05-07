@@ -22,9 +22,10 @@ async function runChecks(): Promise<HealthStatus> {
       headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}` },
     })
       .then(r => r.json())
-      .then((d: { balance_infos: Array<{ total_balance: number }> }) => {
-        const bal = d?.balance_infos?.[0]?.total_balance ?? null;
-        return { ok: typeof bal === "number" && bal > 0, balance: bal };
+      .then((d: { balance_infos: Array<{ total_balance: string | number }> }) => {
+        const raw = d?.balance_infos?.[0]?.total_balance ?? null;
+        const balance = raw !== null ? parseFloat(String(raw)) : null;
+        return { ok: balance !== null && !isNaN(balance) && balance > 0, balance };
       }),
   ]);
 
