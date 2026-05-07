@@ -161,7 +161,7 @@ export default function WhatIfCalculator() {
             onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,152,234,0.35)")}
             onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
-          {walletBalance && (
+          {!!walletBalance && (
             <>
               <button
                 onClick={() => setAmount(walletBalance.toString())}
