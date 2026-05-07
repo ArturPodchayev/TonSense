@@ -99,8 +99,10 @@ export default function OnboardingModal() {
           transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
           transform: `translateX(-${slide * 100}%)`,
         }}>
-          <SlideWrap centered>
-            <Image src="/logo.png" alt="TonSense" width={72} height={72} unoptimized style={{ borderRadius: 16, marginBottom: 24 }} />
+          <SlideWrap>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+              <Image src="/logo.png" alt="TonSense" width={72} height={72} unoptimized style={{ borderRadius: 16 }} />
+            </div>
             <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.5px" }}>
               Welcome to TonSense 💎
             </h1>
@@ -206,8 +208,10 @@ export default function OnboardingModal() {
             </p>
           </SlideWrap>
 
-          <SlideWrap centered>
-            <Image src="/logo.png" alt="TonSense" width={72} height={72} unoptimized style={{ borderRadius: 16, marginBottom: 24 }} />
+          <SlideWrap>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+              <Image src="/logo.png" alt="TonSense" width={72} height={72} unoptimized style={{ borderRadius: 16 }} />
+            </div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 10px", textAlign: "center", letterSpacing: "-0.5px" }}>
               Ready? Let&apos;s go! 💎
             </h2>
@@ -272,7 +276,7 @@ export default function OnboardingModal() {
   );
 }
 
-function SlideWrap({ children, centered }: { children: React.ReactNode; centered?: boolean }) {
+function SlideWrap({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       minWidth: "100%",
@@ -283,9 +287,10 @@ function SlideWrap({ children, centered }: { children: React.ReactNode; centered
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      ...(centered ? { justifyContent: "center" } : { justifyContent: "flex-start" }),
     }}>
-      <div style={{ width: "100%", maxWidth: 440 }}>
+      {/* margin:"auto 0" centers vertically when content is shorter than the viewport;
+          collapses to 0 automatically when content overflows so scroll still works */}
+      <div style={{ width: "100%", maxWidth: 440, margin: "auto 0" }}>
         {children}
       </div>
     </div>
