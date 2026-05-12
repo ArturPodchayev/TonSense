@@ -25,6 +25,7 @@ async function runChecks(): Promise<HealthStatus> {
       .then((d: { balance_infos: Array<{ total_balance: string | number }> }) => {
         const raw = d?.balance_infos?.[0]?.total_balance ?? null;
         const balance = raw !== null ? parseFloat(String(raw)) : null;
+        // balance stored internally for health logic but never returned to public callers
         return { ok: balance !== null && !isNaN(balance) && balance > 0, balance };
       }),
   ]);
@@ -60,11 +61,16 @@ export async function GET(req: Request) {
     return Response.json(status);
   }
 
-  // Public read — return last saved status (or run a fresh check if cache is empty)
+  // Public read — strip DeepSeek balance before returning (internal financial data)
+  const redact = (s: HealthStatus) => ({
+    ...s,
+    deepseek: { ok: s.deepseek.ok },
+  });
+
   const cached = await redis.get<HealthStatus>(REDIS_KEY);
-  if (cached) return Response.json(cached);
+  if (cached) return Response.json(redact(cached));
 
   const status = await runChecks();
   await redis.set(REDIS_KEY, status, { ex: TTL });
-  return Response.json(status);
+  return Response.json(redact(status));
 }
