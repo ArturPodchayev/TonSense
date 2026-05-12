@@ -66,6 +66,65 @@
 
 ---
 
+## Architecture
+
+### System Context (C1)
+
+Users interact with TonSense through two interfaces: a **web application** and a **Telegram bot**. Both provide the same core functionality.
+
+| External System | Role |
+|---|---|
+| **TonAPI** | Provides tsTON/TON exchange rate. APY is computed by TonSense itself (`pool.total_amount / jetton.total_supply`) — Tonstakers is never called directly. |
+| **DeepSeek API** | Powers two AI modes: structured JSON (verdict / risk / action) for the dashboard calculator; free-form DeFi chat on web and Telegram. |
+| **Ston.fi API** | Swap simulation via `POST /v1/swap/simulate` with 500 ms debounce. Transactions built with `@ston-fi/sdk`, executed on-chain via the Ston.fi router contract. |
+| **Telegram Platform** | Delivers bot responses via Bot API webhook at `/api/bot`. |
+| **Tonkeeper** | User's wallet — signs and broadcasts all transactions via TON Connect. TonSense never submits transactions directly. |
+| **TON Blockchain** | Executes staking (Tonstakers pool contract) and swaps (Ston.fi router contract). |
+
+### Container Diagram (C2)
+
+All containers are deployed on Vercel.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                         Vercel                           │
+│                                                          │
+│  ┌──────────────────────┐   ┌──────────────────────────┐ │
+│  │    Next.js App       │   │     Telegram Bot          │ │
+│  │                      │   │   (webhook handler)       │ │
+│  │  • Web UI            │   │                          │ │
+│  │  • /api/* routes     │   │  • Shares all external   │ │
+│  │    APY, AI, swaps,   │   │    integrations with     │ │
+│  │    alerts, health    │   │    Next.js App            │ │
+│  └─────────┬────────────┘   └──────────┬───────────────┘ │
+│            │                           │                  │
+│            └─────────────┬─────────────┘                  │
+│                          │                                │
+│                 ┌────────▼────────┐                       │
+│                 │  Redis (Upstash)│                       │
+│                 │  APY  — 5 min   │                       │
+│                 │  Price — 1 min  │                       │
+│                 │  History — 1 h  │                       │
+│                 └─────────────────┘                       │
+└──────────────────────────────────────────────────────────┘
+
+┌──────────────────────────┐
+│  User's Browser          │
+│  TON Connect 2.0         │
+│  Builds unsigned txs →   │
+│  routes to Tonkeeper     │
+└──────────────────────────┘
+```
+
+**Key decisions:**
+
+- **Cache-first APY** — Redis → parallel TonAPI fallback (staking pool + jetton master endpoints).
+- **Zero custody** — every write goes through the user's Tonkeeper wallet; TonSense holds no funds.
+- **AI server-side only** — DeepSeek called exclusively from API routes, never from client components.
+- **Same model, two prompts** — structured JSON for the dashboard calculator; free-form prose for the chat assistant.
+
+---
+
 ## Environment Variables
 
 | Variable | Description |
