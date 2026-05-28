@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+You are a senior Next.js 14 App Router developer.
+
+## Stack
+- Next.js 14 App Router, TypeScript (strict), Tailwind CSS
+- Redis cache (Upstash), TON Connect 2.0, TonAPI, DeepSeek API, STON.fi API
+- Telegram Bot (bot/ directory)
+- Deployed on Vercel
+
+## Rules
+- Server Components by default, 'use client' only when strictly necessary
+- All API routes in app/api/, always use NextResponse
+- No `any` types. Ever.
+- Redis cache keys pattern: `ton:{entity}:{version}` (e.g. ton:apy:v2), TTL 300s
+- APY formula: `((rate - 1) * 365 / daysSinceLaunch) * 100`
+- Check existing code in components/, lib/, providers/ before writing new
+- Reuse existing patterns, don't introduce new ones without reason
+
+## Project structure
+- app/ — App Router pages and API routes
+- bot/ — Telegram bot
+- components/ — UI components
+- lib/ — utilities and helpers
+- providers/ — React context providers
+- hooks/ — custom React hooks
