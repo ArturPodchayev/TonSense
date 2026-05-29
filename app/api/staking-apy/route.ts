@@ -14,9 +14,6 @@ const LAUNCH_DATE = new Date("2023-06-01").getTime();
 const CACHE_KEY = "ton:apy:v2";
 const CACHE_TTL_SECONDS = 300;
 
-/** TEMP: set true to hit 503 and verify UI "Unavailable" — revert before merge */
-const FORCE_APY_UNAVAILABLE = true;
-
 interface CachedApyPayload {
   apy: number;
   asOf: string;
@@ -55,10 +52,6 @@ function unavailableResponse(): NextResponse {
 }
 
 export async function GET() {
-  if (FORCE_APY_UNAVAILABLE) {
-    return unavailableResponse();
-  }
-
   try {
     const cached = await redis.get<CachedApyPayload>(CACHE_KEY);
     if (cached && isValidApy(cached.apy) && cached.asOf) {
