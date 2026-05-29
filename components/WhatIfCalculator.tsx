@@ -60,10 +60,9 @@ export default function WhatIfCalculator() {
   const shareCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (walletBalance && !amount) {
-      setAmount(String(walletBalance).replace(",", "."));
-    }
-  }, [walletBalance]);
+    if (!walletBalance || amount) return;
+    void Promise.resolve().then(() => setAmount(String(walletBalance).replace(",", ".")));
+  }, [walletBalance, amount]);
 
   useEffect(() => {
     Promise.allSettled([fetchTonHistory(90), fetchStakingAPY(), fetchTonPrice()]).then(

@@ -79,10 +79,9 @@ export default function DCACalculator() {
   }, [amount]);
 
   useEffect(() => {
-    if (walletBalance && !amount) {
-      setAmount(String(walletBalance).replace(",", "."));
-    }
-  }, [walletBalance]);
+    if (!walletBalance || amount) return;
+    void Promise.resolve().then(() => setAmount(String(walletBalance).replace(",", ".")));
+  }, [walletBalance, amount]);
 
   useEffect(() => {
     Promise.allSettled([fetchStakingAPY(), fetchTonPrice()]).then(([apyVal, priceData]) => {

@@ -22,8 +22,11 @@ export default function AIAnalysis({ tonPrice, change24h, apy, userAmount, mode 
 
   useEffect(() => {
     if (!userAmount || !tonPrice) return;
-    setLoading(true);
-    setAnalysis(null);
+
+    void Promise.resolve().then(() => {
+      setLoading(true);
+      setAnalysis(null);
+    });
 
     fetch("/api/ai-analysis", {
       method: "POST",

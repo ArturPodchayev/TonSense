@@ -54,7 +54,9 @@ export default function Profile() {
   const [firstSeen, setFirstSeen] = useState<string | null>(null);
   const [calcCount, setCalcCount] = useState(0);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    void Promise.resolve().then(() => setMounted(true));
+  }, []);
 
   useEffect(() => {
     Promise.allSettled([fetchTonPrice(), fetchStakingAPY()]).then(([p, a]) => {
@@ -71,24 +73,34 @@ export default function Profile() {
 
   useEffect(() => {
     if (!mounted) return;
-    const seen = localStorage.getItem("tonsense_first_seen");
-    if (seen) {
-      setFirstSeen(new Date(parseInt(seen)).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
-    }
-    setCalcCount(parseInt(localStorage.getItem("tonsense_calc_count") ?? "0"));
+    void Promise.resolve().then(() => {
+      const seen = localStorage.getItem("tonsense_first_seen");
+      if (seen) {
+        setFirstSeen(new Date(parseInt(seen)).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
+      }
+      setCalcCount(parseInt(localStorage.getItem("tonsense_calc_count") ?? "0"));
+    });
   }, [mounted]);
 
   useEffect(() => {
     if (!mounted || !address) return;
     if (!localStorage.getItem("tonsense_first_seen")) {
       localStorage.setItem("tonsense_first_seen", Date.now().toString());
-      setFirstSeen(new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }));
+      void Promise.resolve().then(() =>
+        setFirstSeen(new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" }))
+      );
     }
   }, [mounted, address]);
 
   useEffect(() => {
-    if (!address) { setTxs([]); return; }
-    setTxLoading(true);
+    if (!address) {
+      void Promise.resolve().then(() => {
+        setTxs([]);
+        setTxLoading(false);
+      });
+      return;
+    }
+    void Promise.resolve().then(() => setTxLoading(true));
     fetch(`https://tonapi.io/v2/accounts/${address}/events?limit=5`)
       .then(r => r.json())
       .then(d => setTxs(d.events ?? []))

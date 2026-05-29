@@ -96,19 +96,6 @@ export default function SwapCalculator() {
     return () => document.removeEventListener("click", close);
   }, []);
 
-  // Debounced simulate
-  useEffect(() => {
-    const amt = parseFloat(fromAmt);
-    if (!fromAmt || isNaN(amt) || amt <= 0) {
-      setToAmt(""); setSimData(null); setSimState("idle");
-      return;
-    }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(runSimulate, 500);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromAmt, fromToken.address, toToken.address]);
-
   async function runSimulate() {
     setSimState("loading");
     try {
@@ -130,6 +117,23 @@ export default function SwapCalculator() {
       setSimData(null); setToAmt(""); setSimState("error");
     }
   }
+
+  // Debounced simulate
+  useEffect(() => {
+    const amt = parseFloat(fromAmt);
+    if (!fromAmt || isNaN(amt) || amt <= 0) {
+      void Promise.resolve().then(() => {
+        setToAmt("");
+        setSimData(null);
+        setSimState("idle");
+      });
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => void runSimulate(), 500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromAmt, fromToken.address, toToken.address]);
 
   function flipTokens() {
     const prevFrom = fromToken;

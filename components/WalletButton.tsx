@@ -10,14 +10,12 @@ export default function WalletButton() {
   const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    void Promise.resolve().then(() => setMounted(true));
   }, []);
 
   useEffect(() => {
-    if (!address) {
-      setBalance(null);
-      return;
-    }
+    if (!address) return;
+
     fetch(`https://tonapi.io/v2/accounts/${address}`)
       .then((r) => r.json())
       .then((data) => {
@@ -29,11 +27,13 @@ export default function WalletButton() {
       .catch(() => setBalance(null));
   }, [address]);
 
+  const displayBalance = address ? balance : null;
+
   if (!mounted) return null;
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
-      {wallet && balance !== null && (
+      {wallet && displayBalance !== null && (
         <>
           {/* Desktop */}
           <div
@@ -44,7 +44,7 @@ export default function WalletButton() {
             }}
           >
             <span className="text-white/50 text-xs">Balance</span>
-            <span className="text-[#0098EA] font-bold">{balance.toFixed(2)} TON</span>
+            <span className="text-[#0098EA] font-bold">{displayBalance.toFixed(2)} TON</span>
           </div>
         </>
       )}

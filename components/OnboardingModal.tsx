@@ -286,7 +286,9 @@ export default function OnboardingModal() {
   const touchStart = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      void Promise.resolve().then(() => setVisible(true));
+    }
   }, []);
 
   function close() {

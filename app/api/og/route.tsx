@@ -54,7 +54,7 @@ export async function GET() {
 
           {/* Tagline */}
           <p style={{ fontSize: 22, color: "rgba(255,255,255,0.3)", margin: "16px 0 0", fontWeight: 400 }}>
-            See what you missed. Plan what's next.
+            See what you missed. Plan what&apos;s next.
           </p>
         </div>
 

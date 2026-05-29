@@ -8,10 +8,8 @@ export function useTonBalance() {
   const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!address) {
-      setBalance(null);
-      return;
-    }
+    if (!address) return;
+
     fetch(`https://tonapi.io/v2/accounts/${address}`)
       .then((r) => r.json())
       .then((data) => {
@@ -23,5 +21,5 @@ export function useTonBalance() {
       .catch(() => setBalance(null));
   }, [address]);
 
-  return balance;
+  return address ? balance : null;
 }
