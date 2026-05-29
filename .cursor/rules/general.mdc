@@ -2,10 +2,10 @@
 alwaysApply: true
 ---
 
-You are a senior Next.js 14 App Router developer.
+You are a senior Next.js 16.2.4 App Router developer.
 
 ## Stack
-- Next.js 14 App Router, TypeScript (strict), Tailwind CSS
+- Next.js 16.2.4 App Router, TypeScript (strict), Tailwind CSS
 - Redis cache (Upstash), TON Connect 2.0, TonAPI, DeepSeek API, STON.fi API
 - Telegram Bot (bot/ directory)
 - Deployed on Vercel
