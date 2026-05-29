@@ -67,7 +67,8 @@ export default function DCACalculator() {
   const [frequency, setFrequency] = useState<Frequency>("Weekly");
   const [duration, setDuration] = useState<Duration>(12);
   const walletBalance = useTonBalance();
-  const [apy, setApy] = useState(18.7);
+  const [apy, setApy] = useState<number | null>(null);
+  const [apyLoading, setApyLoading] = useState(true);
   const [currentPrice, setCurrentPrice] = useState(3.24);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -84,39 +85,45 @@ export default function DCACalculator() {
   }, [walletBalance]);
 
   useEffect(() => {
-    Promise.all([fetchStakingAPY(), fetchTonPrice()]).then(([apyVal, priceData]) => {
-      setApy(apyVal);
-      setCurrentPrice(priceData.price);
+    Promise.allSettled([fetchStakingAPY(), fetchTonPrice()]).then(([apyVal, priceData]) => {
+      if (apyVal.status === "fulfilled") {
+        setApy(apyVal.value.apy);
+      } else {
+        setApy(null);
+      }
+      setApyLoading(false);
+      if (priceData.status === "fulfilled") {
+        setCurrentPrice(priceData.value.price);
+      }
     });
   }, []);
 
   const ton = parseFloat(debouncedAmount);
   const isValid = ton > 0 && !isNaN(ton);
+  const canProject = isValid && apy !== null;
 
   const { purchasesPerMonth } = FREQUENCIES.find((f) => f.label === frequency)!;
   const totalPurchases = purchasesPerMonth * duration;
-  const monthlyAmount = isValid ? ton * purchasesPerMonth : 0;
-  const totalTon = isValid ? ton * totalPurchases : 0;
-  const monthlyAPY = apy / 100 / 12;
+  const monthlyAmount = canProject ? ton * purchasesPerMonth : 0;
+  const totalTon = canProject ? ton * totalPurchases : 0;
+  const monthlyAPY = canProject ? apy / 100 / 12 : 0;
 
-  // DCA final portfolio (monthly compounding, buying each month)
   let dcaFinalTon = 0;
-  if (isValid) {
+  if (canProject) {
     for (let m = 1; m <= duration; m++) {
       dcaFinalTon = dcaFinalTon * (1 + monthlyAPY) + monthlyAmount;
     }
   }
-  const totalInvestedUSDT = totalTon * currentPrice;
-  const dcaFinalUSDT = dcaFinalTon * currentPrice;
-  const earnedTON = dcaFinalTon - totalTon;
-  const earnedUSDT = earnedTON * currentPrice;
+  const totalInvestedUSDT = canProject ? totalTon * currentPrice : 0;
+  const dcaFinalUSDT = canProject ? dcaFinalTon * currentPrice : 0;
+  const earnedTON = canProject ? dcaFinalTon - totalTon : 0;
+  const earnedUSDT = canProject ? earnedTON * currentPrice : 0;
 
-  // Lump sum: same total invested all at once on day 0
-  const lumpFinalTon = totalTon * Math.pow(1 + monthlyAPY, duration);
-  const lumpFinalUSDT = lumpFinalTon * currentPrice;
-  const lumpVsDCA = lumpFinalUSDT - dcaFinalUSDT;
+  const lumpFinalTon = canProject ? totalTon * Math.pow(1 + monthlyAPY, duration) : 0;
+  const lumpFinalUSDT = canProject ? lumpFinalTon * currentPrice : 0;
+  const lumpVsDCA = canProject ? lumpFinalUSDT - dcaFinalUSDT : 0;
 
-  const chartData = isValid
+  const chartData = canProject
     ? buildChartData(monthlyAmount, totalTon, duration, currentPrice, monthlyAPY)
     : [];
 
@@ -255,14 +262,22 @@ export default function DCACalculator() {
           <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
             Staking APY (tsTON)
           </span>
-          <span className="text-base font-bold" style={{ color: "#22C55E" }}>
-            {apy.toFixed(1)}%
-          </span>
+          {apyLoading ? (
+            <div className="h-6 w-16 rounded-md bg-white/10 animate-pulse flex-shrink-0" />
+          ) : apy === null ? (
+            <span className="text-sm font-semibold flex-shrink-0" style={{ color: "#F87171" }}>
+              Unavailable
+            </span>
+          ) : (
+            <span className="text-base font-bold flex-shrink-0" style={{ color: "#22C55E" }}>
+              {apy.toFixed(1)}%
+            </span>
+          )}
         </div>
       </div>
 
       {/* Results */}
-      {isValid && (
+      {canProject && (
         <div className="space-y-4">
 
           {/* Summary headline */}

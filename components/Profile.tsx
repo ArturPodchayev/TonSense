@@ -47,7 +47,7 @@ export default function Profile() {
   const address = useTonAddress();
   const balance = useTonBalance();
   const [tonPrice, setTonPrice] = useState(3.24);
-  const [apy, setApy] = useState(18.7);
+  const [apy, setApy] = useState<number | null>(null);
   const [txs, setTxs] = useState<TxEvent[]>([]);
   const [txLoading, setTxLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -57,9 +57,15 @@ export default function Profile() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    Promise.all([fetchTonPrice(), fetchStakingAPY()]).then(([p, a]) => {
-      setTonPrice(p.price);
-      setApy(a);
+    Promise.allSettled([fetchTonPrice(), fetchStakingAPY()]).then(([p, a]) => {
+      if (p.status === "fulfilled") {
+        setTonPrice(p.value.price);
+      }
+      if (a.status === "fulfilled") {
+        setApy(a.value.apy);
+      } else {
+        setApy(null);
+      }
     });
   }, []);
 
@@ -212,7 +218,7 @@ export default function Profile() {
               tsTON APY
             </p>
             <p className="text-sm sm:text-base font-black" style={{ color: "#22C55E" }}>
-              {apy.toFixed(1)}%
+              {apy === null ? "—" : `${apy.toFixed(1)}%`}
             </p>
           </div>
         </div>

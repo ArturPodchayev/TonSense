@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { NextResponse } from "next/server";
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -10,11 +11,40 @@ const POOL_ADDRESS = "0:a45b17f28409229b78360e3290420f13e4fe20f90d7e2bf8c4ac6703
 // tsTON jetton master — holds total_supply used to compute tsTON/TON exchange rate
 const JETTON_MASTER = "0:bdf3fa8098d129b54b4f73b5bac5d1e1fd91eb054169c3916dfc8ccd536d1000";
 const LAUNCH_DATE = new Date("2023-06-01").getTime();
+const CACHE_KEY = "ton:apy:v2";
+const CACHE_TTL_SECONDS = 300;
+
+interface CachedApyPayload {
+  apy: number;
+  asOf: string;
+}
+
+interface StakingApyResponse {
+  apy: number;
+  asOf: string;
+  source: "live" | "cache";
+  cacheTtlSeconds: number;
+}
+
+function isValidApy(apy: number): boolean {
+  return Number.isFinite(apy) && apy > 1 && apy < 20;
+}
+
+function toResponse(payload: CachedApyPayload, source: "live" | "cache"): NextResponse<StakingApyResponse> {
+  return NextResponse.json({
+    apy: payload.apy,
+    asOf: payload.asOf,
+    source,
+    cacheTtlSeconds: CACHE_TTL_SECONDS,
+  });
+}
 
 export async function GET() {
   try {
-    const cached = await redis.get<{ apy: number }>("ton:apy:v2");
-    if (cached && cached.apy > 1 && cached.apy < 20) return Response.json(cached);
+    const cached = await redis.get<CachedApyPayload>(CACHE_KEY);
+    if (cached && isValidApy(cached.apy) && cached.asOf) {
+      return toResponse(cached, "cache");
+    }
 
     // Parallel: get total TON in pool + total tsTON supply
     const [poolRes, jettonRes] = await Promise.all([
@@ -41,17 +71,30 @@ export async function GET() {
     const daysSinceLaunch = (Date.now() - LAUNCH_DATE) / 86_400_000;
     // APY = ((rate - 1) * 365 / daysSinceLaunch) * 100
     const apy = parseFloat(
-      (((rate - 1) * 365 / daysSinceLaunch) * 100).toFixed(2)
+      (((rate - 1) * 365 / daysSinceLaunch) * 100).toFixed(1)
     );
-    if (apy < 1 || apy > 20) throw new Error(`apy out of plausible range: ${apy}`);
-    const result = { apy };
+    if (!isValidApy(apy)) throw new Error(`apy out of plausible range: ${apy}`);
+    const result: CachedApyPayload = {
+      apy,
+      asOf: new Date().toISOString(),
+    };
 
-    await redis.set("ton:apy:v2", result, { ex: 300 });
-    return Response.json(result);
+    await redis.set(CACHE_KEY, result, { ex: CACHE_TTL_SECONDS });
+    return toResponse(result, "live");
   } catch (err) {
     console.error("[staking-apy]", err);
-    const fallback = await redis.get<{ apy: number }>("ton:apy:v2");
-    if (fallback && fallback.apy > 1 && fallback.apy < 20) return Response.json(fallback);
-    return Response.json({ error: "rate unavailable" }, { status: 503 });
+    const fallback = await redis.get<CachedApyPayload>(CACHE_KEY);
+    if (fallback && isValidApy(fallback.apy) && fallback.asOf) {
+      return toResponse(fallback, "cache");
+    }
+    return NextResponse.json(
+      {
+        error: {
+          code: "APY_UNAVAILABLE",
+          message: "Staking APY unavailable",
+        },
+      },
+      { status: 503 }
+    );
   }
 }

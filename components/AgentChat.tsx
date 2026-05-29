@@ -29,17 +29,23 @@ export default function AgentChat() {
   const [loading, setLoading] = useState(false);
   const [tonPrice, setTonPrice] = useState<number>(3.24);
   const [change24h, setChange24h] = useState<number>(0);
-  const [apy, setApy] = useState<number>(18.7);
+  const [apy, setApy] = useState<number | null>(null);
   const walletBalance = useTonBalance();
   const walletAddress = useTonAddress();
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    Promise.all([fetchTonPrice(), fetchStakingAPY()]).then(([priceData, apyVal]) => {
-      setTonPrice(priceData.price);
-      setChange24h(priceData.change24h);
-      setApy(apyVal);
+    Promise.allSettled([fetchTonPrice(), fetchStakingAPY()]).then(([priceData, apyVal]) => {
+      if (priceData.status === "fulfilled") {
+        setTonPrice(priceData.value.price);
+        setChange24h(priceData.value.change24h);
+      }
+      if (apyVal.status === "fulfilled") {
+        setApy(apyVal.value.apy);
+      } else {
+        setApy(null);
+      }
     });
   }, []);
 
@@ -112,7 +118,7 @@ export default function AgentChat() {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
           style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: "#22C55E" }}
         >
-          APY {apy.toFixed(1)}%
+          APY {apy === null ? "—" : `${apy.toFixed(1)}%`}
         </div>
         {walletBalance != null && (
           <div

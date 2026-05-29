@@ -8,6 +8,20 @@ export interface HistoryPoint {
   price: number;
 }
 
+export interface StakingApyData {
+  apy: number;
+  asOf: string;
+  source: "live" | "cache";
+  cacheTtlSeconds: number;
+}
+
+interface ApiErrorResponse {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
+
 export async function fetchTonPrice(): Promise<PriceData> {
   try {
     const res = await fetch("/api/ton-price");
@@ -29,13 +43,12 @@ export async function fetchTonHistory(days: number): Promise<HistoryPoint[]> {
   }
 }
 
-export async function fetchStakingAPY(): Promise<number> {
-  try {
-    const res = await fetch("/api/staking-apy");
-    if (!res.ok) throw new Error("fetch failed");
-    const data: { apy: number } = await res.json();
-    return data.apy;
-  } catch {
-    return 18.7;
+export async function fetchStakingAPY(): Promise<StakingApyData> {
+  const res = await fetch("/api/staking-apy", { cache: "no-store" });
+  if (!res.ok) {
+    const errorPayload = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+    const message = errorPayload?.error?.message ?? "Failed to fetch staking APY";
+    throw new Error(message);
   }
+  return (await res.json()) as StakingApyData;
 }

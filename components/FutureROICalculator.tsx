@@ -80,7 +80,7 @@ export default function FutureROICalculator() {
   const [selectedPeriods, setSelectedPeriods] = useState<number[]>([1, 3, 12]);
   const [periodHint, setPeriodHint] = useState(false);
   const walletBalance = useTonBalance();
-  const [apy, setApy] = useState<number>(18.7);
+  const [apy, setApy] = useState<number | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number>(1.33);
   const [change24h, setChange24h] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,10 +100,16 @@ export default function FutureROICalculator() {
   }, [walletBalance]);
 
   useEffect(() => {
-    Promise.all([fetchStakingAPY(), fetchTonPrice()]).then(([apyVal, priceData]) => {
-      setApy(apyVal);
-      setCurrentPrice(priceData.price);
-      setChange24h(priceData.change24h);
+    Promise.allSettled([fetchStakingAPY(), fetchTonPrice()]).then(([apyVal, priceData]) => {
+      if (apyVal.status === "fulfilled") {
+        setApy(apyVal.value.apy);
+      } else {
+        setApy(null);
+      }
+      if (priceData.status === "fulfilled") {
+        setCurrentPrice(priceData.value.price);
+        setChange24h(priceData.value.change24h);
+      }
       setIsLoading(false);
     });
   }, []);
@@ -125,26 +131,27 @@ export default function FutureROICalculator() {
 
   const ton = parseFloat(debouncedAmount);
   const isValid = ton > 0 && !isNaN(ton);
-  const apyDecimal = apy / 100;
+  const canProject = isValid && apy !== null;
 
-  const forecastRows: ForecastRow[] = PERIOD_OPTIONS.filter((p) =>
-    selectedPeriods.includes(p.months)
-  ).map((p) => {
-    const earnedTON = ton * apyDecimal * (p.months / 12);
-    const totalTON = ton + earnedTON;
-    return {
-      label: p.label,
-      months: p.months,
-      initial: ton * currentPrice,
-      earnedTON,
-      earnedUSDT: earnedTON * currentPrice,
-      total: totalTON * currentPrice,
-    };
-  });
+  let forecastRows: ForecastRow[] = [];
+  let chartData: Record<string, number | string>[] = [];
 
-  const chartData = isValid
-    ? buildChartData(ton, currentPrice, apyDecimal, selectedPeriods, inTON)
-    : [];
+  if (canProject) {
+    const apyDecimal = apy / 100;
+    forecastRows = PERIOD_OPTIONS.filter((p) => selectedPeriods.includes(p.months)).map((p) => {
+      const earnedTON = ton * apyDecimal * (p.months / 12);
+      const totalTON = ton + earnedTON;
+      return {
+        label: p.label,
+        months: p.months,
+        initial: ton * currentPrice,
+        earnedTON,
+        earnedUSDT: earnedTON * currentPrice,
+        total: totalTON * currentPrice,
+      };
+    });
+    chartData = buildChartData(ton, currentPrice, apyDecimal, selectedPeriods, inTON);
+  }
 
   return (
     <div className="space-y-4">
@@ -271,6 +278,10 @@ export default function FutureROICalculator() {
           </div>
           {isLoading ? (
             <div className="h-6 w-16 rounded-md bg-white/10 animate-pulse flex-shrink-0" />
+          ) : apy === null ? (
+            <span className="text-sm font-semibold flex-shrink-0" style={{ color: "#F87171" }}>
+              Unavailable
+            </span>
           ) : (
             <span className="text-base font-bold flex-shrink-0" style={{ color: "#22C55E" }}>
               {apy.toFixed(1)}%
@@ -281,7 +292,7 @@ export default function FutureROICalculator() {
       </div>
 
       {/* Results */}
-      {isValid && (
+      {canProject && (
         <div className="space-y-4">
           {/* Chart */}
           <div className="rounded-2xl p-5" style={glass}>

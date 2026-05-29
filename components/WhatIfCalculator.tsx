@@ -50,7 +50,8 @@ export default function WhatIfCalculator() {
   const walletBalance = useTonBalance();
   const [results, setResults] = useState<Results | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
-  const [apy, setApy] = useState<number>(18.7);
+  const [apy, setApy] = useState<number | null>(null);
+  const [apyLoading, setApyLoading] = useState(true);
   const [currentPrice, setCurrentPrice] = useState<number>(3.24);
   const [change24h, setChange24h] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -65,12 +66,21 @@ export default function WhatIfCalculator() {
   }, [walletBalance]);
 
   useEffect(() => {
-    Promise.all([fetchTonHistory(90), fetchStakingAPY(), fetchTonPrice()]).then(
+    Promise.allSettled([fetchTonHistory(90), fetchStakingAPY(), fetchTonPrice()]).then(
       ([hist, apyVal, priceData]) => {
-        setHistory(hist);
-        setApy(apyVal);
-        setCurrentPrice(priceData.price);
-        setChange24h(priceData.change24h);
+        if (hist.status === "fulfilled") {
+          setHistory(hist.value);
+        }
+        if (apyVal.status === "fulfilled") {
+          setApy(apyVal.value.apy);
+        } else {
+          setApy(null);
+        }
+        setApyLoading(false);
+        if (priceData.status === "fulfilled") {
+          setCurrentPrice(priceData.value.price);
+          setChange24h(priceData.value.change24h);
+        }
         setHistoryLoading(false);
       }
     );
@@ -117,7 +127,7 @@ export default function WhatIfCalculator() {
 
   function calculate() {
     const ton = parseFloat(amount);
-    if (!ton || ton <= 0 || history.length === 0) return;
+    if (!ton || ton <= 0 || history.length === 0 || apy === null) return;
     const heldUSDT = ton * currentPrice;
     const stakedTON = ton * (1 + (apy / 100) * (period / 365));
     const stakedUSDT = stakedTON * currentPrice;
@@ -222,9 +232,29 @@ export default function WhatIfCalculator() {
           </div>
         </div>
 
+        <div
+          className="flex items-center justify-between rounded-xl px-4 py-3"
+          style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+            Staking APY (tsTON)
+          </span>
+          {apyLoading ? (
+            <div className="h-6 w-16 rounded-md bg-white/10 animate-pulse flex-shrink-0" />
+          ) : apy === null ? (
+            <span className="text-sm font-semibold flex-shrink-0" style={{ color: "#F87171" }}>
+              Unavailable
+            </span>
+          ) : (
+            <span className="text-base font-bold flex-shrink-0" style={{ color: "#22C55E" }}>
+              {apy.toFixed(1)}%
+            </span>
+          )}
+        </div>
+
         <button
           onClick={calculate}
-          disabled={!amount || parseFloat(amount) <= 0 || historyLoading}
+          disabled={!amount || parseFloat(amount) <= 0 || historyLoading || apyLoading || apy === null}
           className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
             background: "linear-gradient(135deg, #0098EA 0%, #0077BB 100%)",
@@ -233,12 +263,12 @@ export default function WhatIfCalculator() {
           onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.01)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
         >
-          {historyLoading ? "Loading data…" : "Calculate"}
+          {historyLoading || apyLoading ? "Loading data…" : apy === null ? "APY unavailable" : "Calculate"}
         </button>
       </div>
 
       {/* Results */}
-      {results && (
+      {results && apy !== null && (
         <div className="space-y-4">
           <p className="text-base sm:text-xl font-bold text-white px-1">
             If you had staked{" "}
