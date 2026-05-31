@@ -52,12 +52,11 @@ function buildChartData(
       holding: holdingValue,
     };
     for (const m of selectedMonths) {
-      if (t <= m) {
-        const stakedTON = tonAmount * (1 + apyDecimal * (t / 12));
-        row[`${m}mo`] = parseFloat(
-          (inTON ? stakedTON : stakedTON * currentPrice).toFixed(2)
-        );
-      }
+      const tClamped = Math.min(t, m);
+      const stakedTON = tonAmount * (1 + apyDecimal * (tClamped / 12));
+      row[`${m}mo`] = parseFloat(
+        (inTON ? stakedTON : stakedTON * currentPrice).toFixed(2)
+      );
     }
     return row;
   });
@@ -377,7 +376,6 @@ export default function FutureROICalculator() {
                     stroke={p.color}
                     strokeWidth={2.5}
                     dot={false}
-                    connectNulls={false}
                     activeDot={{ r: 4, strokeWidth: 0 }}
                   />
                 ))}
