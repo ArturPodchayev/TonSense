@@ -1,50 +1,112 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTonConnectUI, useTonAddress, useTonWallet } from "@tonconnect/ui-react";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { TonClient } from "@ton/ton";
 import { toNano } from "@ton/core";
 import { useTonBalance } from "@/hooks/useTonBalance";
 
-// ── Token shape from STON.fi assets API ───────────────────────────────────────
+// ── Token list ────────────────────────────────────────────────────────────────
 
 interface Token {
-  contract_address: string;
   symbol: string;
   display_name: string;
-  image_url: string | null;
+  contract_address: string;
   decimals: number;
   kind: string;
+  image_url: string;
 }
 
-interface StonAssetsResponse {
-  asset_list: Array<Token & { deprecated?: boolean }>;
-}
+const TOKENS: Token[] = [
+  { symbol: "TON",   display_name: "Toncoin",         contract_address: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",   decimals: 9, kind: "Ton",    image_url: "https://assets.ston.fi/images/EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c/image.png" },
+  { symbol: "USDT",  display_name: "Tether USD",       contract_address: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs", decimals: 6, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs/image.png" },
+  { symbol: "USDC",  display_name: "USD Coin",         contract_address: "EQC61aVMaYWNMNFMDFKHHsAiAWiNDjzfA0KwUyc5UUQBE1Vq", decimals: 6, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQC61aVMaYWNMNFMDFKHHsAiAWiNDjzfA0KwUyc5UUQBE1Vq/image.png" },
+  { symbol: "tsTON", display_name: "Tonstakers TON",   contract_address: "EQC98_qAmNEptmzSMQMHMgMKUFSf14sHBSKhHCnIBFqRoGS6",  decimals: 9, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQC98_qAmNEptmzSMQMHMgMKUFSf14sHBSKhHCnIBFqRoGS6/image.png" },
+  { symbol: "NOT",   display_name: "Notcoin",          contract_address: "EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT",   decimals: 9, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT/image.png" },
+  { symbol: "SCALE", display_name: "Ston.fi",          contract_address: "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE",   decimals: 9, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE/image.png" },
+];
 
 // ── TokenIcon ─────────────────────────────────────────────────────────────────
 
 function TokenIcon({ token, size }: { token: Token; size: number }) {
-  if (token.image_url) {
-    return (
-      <img
-        src={token.image_url}
-        alt={token.symbol}
-        width={size}
-        height={size}
-        style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-      />
-    );
-  }
   return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: "rgba(0,152,234,0.2)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: Math.round(size * 0.45), fontWeight: 700, color: "#0098EA", flexShrink: 0,
-    }}>
-      {token.symbol[0]}
+    <img
+      src={token.image_url}
+      alt={token.symbol}
+      width={size}
+      height={size}
+      style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+    />
+  );
+}
+
+// ── TokenPicker modal ─────────────────────────────────────────────────────────
+
+interface TokenPickerProps {
+  exclude: Token;
+  selected: Token;
+  onSelect: (t: Token) => void;
+  onClose: () => void;
+}
+
+function TokenPicker({ exclude, selected, onSelect, onClose }: TokenPickerProps) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "rgba(0,0,0,0.72)", backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "0 16px",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: "100%", maxWidth: 340, maxHeight: 400, overflowY: "auto",
+          borderRadius: 20,
+          background: "#0d0d1a",
+          border: "1px solid rgba(255,255,255,0.14)",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.85)",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+            Select Token
+          </p>
+        </div>
+
+        {TOKENS.filter(t => t.contract_address !== exclude.contract_address).map((t, i, arr) => {
+          const isSelected = t.contract_address === selected.contract_address;
+          return (
+            <button
+              key={t.contract_address}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: 12,
+                padding: "12px 16px", cursor: "pointer",
+                background: isSelected ? "rgba(0,152,234,0.1)" : "transparent",
+                border: "none",
+                borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                textAlign: "left",
+              }}
+              onClick={() => onSelect(t)}
+              onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isSelected ? "rgba(0,152,234,0.1)" : "transparent"; }}
+            >
+              <TokenIcon token={t} size={36} />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{t.symbol}</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>{t.display_name}</div>
+              </div>
+              {isSelected && (
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#0098EA", flexShrink: 0 }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -84,89 +146,6 @@ function getClient() {
   return _client;
 }
 
-// ── TokenDropdown ─────────────────────────────────────────────────────────────
-
-interface TokenDropdownProps {
-  tokens: Token[];
-  selected: Token | null;
-  onChange: (t: Token) => void;
-  search: string;
-  onSearchChange: (v: string) => void;
-  isOpen: boolean;
-  onToggle: () => void;
-}
-
-function TokenDropdown({ tokens, selected, onChange, search, onSearchChange, isOpen, onToggle }: TokenDropdownProps) {
-  return (
-    // position:relative + z-index when open so the button sits above the overlay
-    <div className="relative flex-shrink-0" style={isOpen ? { zIndex: 50 } : undefined}>
-      {/* Full-screen invisible overlay — clicking it closes the dropdown without
-          any document listener race condition */}
-      {isOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={onToggle} />
-      )}
-
-      <button
-        onClick={onToggle}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl"
-        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 100 }}
-      >
-        {selected ? (
-          <>
-            <TokenIcon token={selected} size={20} />
-            <span style={{ fontWeight: 600, fontSize: 14 }}>{selected.symbol}</span>
-          </>
-        ) : (
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading…</span>
-        )}
-        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
-      </button>
-
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 mt-1 w-64 rounded-2xl"
-          style={{ ...glass, zIndex: 50, boxShadow: "0 8px 40px rgba(0,0,0,0.6)", maxHeight: 320, overflowY: "auto" }}
-        >
-          <div
-            className="p-2 sticky top-0"
-            style={{ background: "rgba(8,8,16,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-          >
-            <input
-              autoFocus
-              className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
-              placeholder="Search token…"
-              value={search}
-              onChange={e => onSearchChange(e.target.value)}
-            />
-          </div>
-          {tokens.length === 0 && (
-            <div style={{ padding: "14px 16px", color: "rgba(255,255,255,0.3)", fontSize: 13, textAlign: "center" }}>
-              No tokens found
-            </div>
-          )}
-          {tokens.map(t => (
-            <button
-              key={t.contract_address}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
-              style={{ background: t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent" }}
-              onClick={() => onChange(t)}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent"; }}
-            >
-              <TokenIcon token={t} size={28} />
-              <div>
-                <div style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{t.symbol}</div>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t.display_name}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function SwapCalculator() {
@@ -175,44 +154,21 @@ export default function SwapCalculator() {
   const walletAddress  = useTonAddress();
   const tonBalance     = useTonBalance();
 
-  const [assets,    setAssets]    = useState<Token[]>([]);
-  const [fromToken, setFromToken] = useState<Token | null>(null);
-  const [toToken,   setToToken]   = useState<Token | null>(null);
+  const [fromToken, setFromToken] = useState<Token>(TOKENS[0]);
+  const [toToken,   setToToken]   = useState<Token>(TOKENS[1]);
   const [fromAmt,   setFromAmt]   = useState("");
   const [toAmt,     setToAmt]     = useState("");
   const [tonPrice,  setTonPrice]  = useState(0);
+  const [pickerFor, setPickerFor] = useState<"from" | "to" | null>(null);
 
   const [simState, setSimState] = useState<SimState>("idle");
   const [simData,  setSimData]  = useState<SimResult | null>(null);
   const [txState,  setTxState]  = useState<TxState>("idle");
   const [errMsg,   setErrMsg]   = useState("");
 
-  const [showPreview,  setShowPreview]  = useState(false);
-  const [fromDropOpen, setFromDropOpen] = useState(false);
-  const [toDropOpen,   setToDropOpen]   = useState(false);
-  const [fromSearch,   setFromSearch]   = useState("");
-  const [toSearch,     setToSearch]     = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Fetch STON.fi assets on mount
-  useEffect(() => {
-    fetch("https://api.ston.fi/v1/assets")
-      .then(r => r.json())
-      .then((d: StonAssetsResponse) => {
-        const list = (d.asset_list ?? [])
-          .filter(a => (a.kind === "Jetton" || a.kind === "Ton") && !a.deprecated)
-          .sort((a, b) => {
-            if (a.kind === "Ton") return -1;
-            if (b.kind === "Ton") return 1;
-            return a.symbol.localeCompare(b.symbol);
-          });
-        setAssets(list);
-        setFromToken(list.find(a => a.kind === "Ton") ?? list[0] ?? null);
-        setToToken(list.find(a => a.symbol === "USDT") ?? list[1] ?? null);
-      })
-      .catch(() => {});
-  }, []);
 
   // Fetch TON price for USD estimates
   useEffect(() => {
@@ -223,7 +179,6 @@ export default function SwapCalculator() {
   }, []);
 
   async function runSimulate() {
-    if (!fromToken || !toToken) return;
     setSimState("loading");
     try {
       const units = BigInt(Math.round(parseFloat(fromAmt) * 10 ** fromToken.decimals)).toString();
@@ -260,7 +215,7 @@ export default function SwapCalculator() {
     debounceRef.current = setTimeout(() => void runSimulate(), 500);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromAmt, fromToken?.contract_address, toToken?.contract_address]);
+  }, [fromAmt, fromToken.contract_address, toToken.contract_address]);
 
   function flipTokens() {
     setFromToken(toToken);
@@ -278,7 +233,6 @@ export default function SwapCalculator() {
   }
 
   function handleSwapClick() {
-    if (!fromToken || !toToken) return;
     const amt = parseFloat(fromAmt);
     if (!fromAmt || isNaN(amt) || amt <= 0 || !simData) return;
 
@@ -298,7 +252,7 @@ export default function SwapCalculator() {
   }
 
   async function handleConfirm() {
-    if (!walletAddress || !simData || !fromToken || !toToken) return;
+    if (!walletAddress || !simData) return;
     setShowPreview(false);
     setTxState("sending");
 
@@ -355,34 +309,12 @@ export default function SwapCalculator() {
     }
   }
 
-  // ── Derived values ────────────────────────────────────────────────────────────
+  // ── Derived values ─────────────────────────────────────────────────────────
 
-  const fromFiltered = useMemo(() =>
-    assets
-      .filter(t =>
-        t.contract_address !== toToken?.contract_address &&
-        (t.symbol.toLowerCase().includes(fromSearch.toLowerCase()) ||
-         t.display_name.toLowerCase().includes(fromSearch.toLowerCase()))
-      )
-      .slice(0, 50),
-    [assets, toToken?.contract_address, fromSearch]
-  );
-
-  const toFiltered = useMemo(() =>
-    assets
-      .filter(t =>
-        t.contract_address !== fromToken?.contract_address &&
-        (t.symbol.toLowerCase().includes(toSearch.toLowerCase()) ||
-         t.display_name.toLowerCase().includes(toSearch.toLowerCase()))
-      )
-      .slice(0, 50),
-    [assets, fromToken?.contract_address, toSearch]
-  );
-
-  const computedRate = simData && fromAmt && fromToken && toToken
+  const computedRate = simData && fromAmt
     ? parseFloat(simData.ask_units) / 10 ** toToken.decimals / parseFloat(fromAmt)
     : null;
-  const rateStr = computedRate !== null && fromToken && toToken
+  const rateStr = computedRate !== null
     ? `1 ${fromToken.symbol} = ${computedRate.toFixed(6)} ${toToken.symbol}`
     : null;
 
@@ -390,21 +322,36 @@ export default function SwapCalculator() {
     ? `${(parseFloat(simData.fee_percent) * 100).toFixed(3)}%`
     : "~0.15%";
 
-  const minReceived = simData && toToken
+  const minReceived = simData
     ? (parseFloat(simData.min_ask_units) / 10 ** toToken.decimals).toFixed(toToken.decimals === 6 ? 4 : 6)
     : "0";
 
   const toUsd = (() => {
-    if (!toToken) return "";
     const n = parseFloat(toAmt || "0");
     if (!n) return "";
     if (toToken.symbol.toUpperCase().includes("USD")) return `≈ $${n.toFixed(2)}`;
-    if (tonPrice && (toToken.kind === "Ton" || toToken.symbol.toUpperCase() === "TSTON" || toToken.symbol.toUpperCase() === "STTON"))
+    if (tonPrice && (toToken.kind === "Ton" || toToken.symbol.toUpperCase() === "TSTON"))
       return `≈ $${(n * tonPrice).toFixed(2)}`;
     return "";
   })();
 
-  const showFromBalance = wallet && tonBalance !== null && fromToken?.kind === "Ton";
+  const showFromBalance = wallet && tonBalance !== null && fromToken.kind === "Ton";
+
+  // ── Token selector button ──────────────────────────────────────────────────
+
+  function TokenButton({ token, side }: { token: Token; side: "from" | "to" }) {
+    return (
+      <button
+        onClick={() => setPickerFor(side)}
+        className="flex items-center gap-2 rounded-xl flex-shrink-0"
+        style={{ padding: "8px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+      >
+        <TokenIcon token={token} size={24} />
+        <span style={{ fontWeight: 600, fontSize: 14 }}>{token.symbol}</span>
+        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>▾</span>
+      </button>
+    );
+  }
 
   // ── Success state ────────────────────────────────────────────────────────────
 
@@ -414,7 +361,7 @@ export default function SwapCalculator() {
         <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
         <p style={{ color: "#22C55E", fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Swap sent!</p>
         <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginBottom: 20 }}>
-          Check your wallet for {toToken?.symbol}
+          Check your wallet for {toToken.symbol}
         </p>
         <button
           onClick={() => { setTxState("idle"); setFromAmt(""); setToAmt(""); setSimData(null); setSimState("idle"); }}
@@ -445,16 +392,7 @@ export default function SwapCalculator() {
         {/* ── From card ─────────────────────────────────────────────────────── */}
         <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <TokenDropdown
-              tokens={fromFiltered}
-              selected={fromToken}
-              onChange={t => { setFromToken(t); setFromDropOpen(false); setFromSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
-              search={fromSearch}
-              onSearchChange={setFromSearch}
-              isOpen={fromDropOpen}
-              onToggle={() => { setFromDropOpen(v => !v); setToDropOpen(false); }}
-            />
-
+            <TokenButton token={fromToken} side="from" />
             <input
               type="number"
               placeholder="0"
@@ -462,19 +400,12 @@ export default function SwapCalculator() {
               value={fromAmt}
               onChange={e => setFromAmt(e.target.value)}
               style={{
-                flex: 1,
-                minWidth: 0,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                textAlign: "right",
-                fontSize: 24,
-                fontWeight: 700,
-                color: "#fff",
+                flex: 1, minWidth: 0,
+                background: "transparent", border: "none", outline: "none",
+                textAlign: "right", fontSize: 24, fontWeight: 700, color: "#fff",
               }}
             />
           </div>
-
           {showFromBalance && (
             <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
               Balance: {tonBalance!.toFixed(2)} TON
@@ -508,8 +439,7 @@ export default function SwapCalculator() {
             style={{
               background: "rgba(0,152,234,0.12)",
               border: "1px solid rgba(0,152,234,0.3)",
-              color: "#0098EA",
-              fontSize: 18,
+              color: "#0098EA", fontSize: 18,
               transition: "transform 0.25s",
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "rotate(180deg) scale(1.1)"; }}
@@ -522,28 +452,15 @@ export default function SwapCalculator() {
         {/* ── To card ───────────────────────────────────────────────────────── */}
         <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <TokenDropdown
-              tokens={toFiltered}
-              selected={toToken}
-              onChange={t => { setToToken(t); setToDropOpen(false); setToSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
-              search={toSearch}
-              onSearchChange={setToSearch}
-              isOpen={toDropOpen}
-              onToggle={() => { setToDropOpen(v => !v); setFromDropOpen(false); }}
-            />
-
+            <TokenButton token={toToken} side="to" />
             <div style={{
-              flex: 1,
-              minWidth: 0,
-              textAlign: "right",
-              fontSize: 24,
-              fontWeight: 700,
+              flex: 1, minWidth: 0, textAlign: "right",
+              fontSize: 24, fontWeight: 700,
               color: simState === "ready" ? "#22C55E" : "rgba(255,255,255,0.2)",
             }}>
               {toAmt || "0"}
             </div>
           </div>
-
           <div style={{ marginTop: 6, minHeight: 16, fontSize: 11, color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", gap: 4 }}>
             {simState === "loading" ? (
               <>
@@ -562,7 +479,7 @@ export default function SwapCalculator() {
           </div>
         )}
 
-        {/* ── Rate unavailable ──────────────────────────────────────────────── */}
+        {/* ── No liquidity ──────────────────────────────────────────────────── */}
         {simState === "error" && fromAmt && (
           <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, textAlign: "center" }}>
             No liquidity for this pair
@@ -597,7 +514,7 @@ export default function SwapCalculator() {
         ) : (
           <button
             onClick={handleSwapClick}
-            disabled={!fromAmt || simState !== "ready" || !fromToken || !toToken}
+            disabled={!fromAmt || simState !== "ready"}
             className="w-full py-4 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.01] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             style={{
               background: "linear-gradient(135deg, #0098EA, #0077BB)",
@@ -605,15 +522,33 @@ export default function SwapCalculator() {
               color: "#fff",
             }}
           >
-            {simState === "loading"
-              ? "Fetching rate…"
-              : `Swap ${fromToken?.symbol ?? "…"} → ${toToken?.symbol ?? "…"}`}
+            {simState === "loading" ? "Fetching rate…" : `Swap ${fromToken.symbol} → ${toToken.symbol}`}
           </button>
         )}
       </div>
 
+      {/* ── Token picker modal ───────────────────────────────────────────────── */}
+      {pickerFor !== null && (
+        <TokenPicker
+          exclude={pickerFor === "from" ? toToken : fromToken}
+          selected={pickerFor === "from" ? fromToken : toToken}
+          onSelect={t => {
+            if (pickerFor === "from") {
+              setFromToken(t);
+            } else {
+              setToToken(t);
+            }
+            setSimData(null);
+            setToAmt("");
+            setSimState("idle");
+            setPickerFor(null);
+          }}
+          onClose={() => setPickerFor(null)}
+        />
+      )}
+
       {/* ── Preview modal ────────────────────────────────────────────────────── */}
-      {showPreview && simData && fromToken && toToken && (
+      {showPreview && simData && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
