@@ -98,7 +98,14 @@ interface TokenDropdownProps {
 
 function TokenDropdown({ tokens, selected, onChange, search, onSearchChange, isOpen, onToggle }: TokenDropdownProps) {
   return (
-    <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
+    // position:relative + z-index when open so the button sits above the overlay
+    <div className="relative flex-shrink-0" style={isOpen ? { zIndex: 50 } : undefined}>
+      {/* Full-screen invisible overlay — clicking it closes the dropdown without
+          any document listener race condition */}
+      {isOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={onToggle} />
+      )}
+
       <button
         onClick={onToggle}
         className="flex items-center gap-2 px-3 py-2 rounded-xl"
@@ -117,8 +124,8 @@ function TokenDropdown({ tokens, selected, onChange, search, onSearchChange, isO
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-1 z-50 w-64 rounded-2xl"
-          style={{ ...glass, boxShadow: "0 8px 40px rgba(0,0,0,0.6)", maxHeight: 320, overflowY: "auto" }}
+          className="absolute top-full left-0 mt-1 w-64 rounded-2xl"
+          style={{ ...glass, zIndex: 50, boxShadow: "0 8px 40px rgba(0,0,0,0.6)", maxHeight: 320, overflowY: "auto" }}
         >
           <div
             className="p-2 sticky top-0"
@@ -213,13 +220,6 @@ export default function SwapCalculator() {
       .then(r => r.json())
       .then(d => setTonPrice(d.price ?? 0))
       .catch(() => {});
-  }, []);
-
-  // Close dropdowns on outside click
-  useEffect(() => {
-    function close() { setFromDropOpen(false); setToDropOpen(false); }
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
   }, []);
 
   async function runSimulate() {
@@ -564,17 +564,9 @@ export default function SwapCalculator() {
 
         {/* ── Rate unavailable ──────────────────────────────────────────────── */}
         {simState === "error" && fromAmt && (
-          <div className="rounded-xl p-3 text-center" style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)" }}>
-            <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 4 }}>Rate unavailable for this pair</p>
-            <a
-              href="https://app.ston.fi/swap"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#0098EA", fontSize: 12 }}
-            >
-              Swap manually on Ston.fi →
-            </a>
-          </div>
+          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, textAlign: "center" }}>
+            No liquidity for this pair
+          </p>
         )}
 
         {/* ── Validation / tx error ─────────────────────────────────────────── */}
