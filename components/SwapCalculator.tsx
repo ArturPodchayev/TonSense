@@ -36,7 +36,7 @@ function TokenIcon({ token, size }: { token: Token; size: number }) {
       alt={token.symbol}
       width={size}
       height={size}
-      style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+      style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0, width: size, height: size }}
       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
     />
   );
@@ -169,6 +169,13 @@ export default function SwapCalculator() {
   const [showPreview, setShowPreview] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Preload token images so the picker has no load flash
+  useEffect(() => {
+    TOKENS.forEach(t => {
+      if (t.image_url) { const img = new Image(); img.src = t.image_url; }
+    });
+  }, []);
 
   // Fetch TON price for USD estimates
   useEffect(() => {
