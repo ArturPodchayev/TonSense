@@ -7,17 +7,47 @@ import { TonClient } from "@ton/ton";
 import { toNano } from "@ton/core";
 import { useTonBalance } from "@/hooks/useTonBalance";
 
-// ── Token list ────────────────────────────────────────────────────────────────
+// ── Token shape from STON.fi assets API ───────────────────────────────────────
 
-const TOKENS = [
-  { symbol: "TON",   name: "Toncoin",         address: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",   decimals: 9, logo: "💎" },
-  { symbol: "tsTON", name: "Tonstakers TON",   address: "EQC98_qAmNEptUtPc7W6xdHh_ZHrBUFpw5Ft_IzNU20QAJav", decimals: 9, logo: "🔷" },
-  { symbol: "stTON", name: "Bemo Staked TON",  address: "EQDNhy-nxYFgUqzfUzImBEP67JqsyMIcyk2S5_RwNNEYku0k", decimals: 9, logo: "🔹" },
-  { symbol: "USDT",  name: "Tether USD",       address: "EQDGXX6RPjzl0N6GQUyTDbFaCvcG2ocnakLA6To1iPooWZES", decimals: 6, logo: "💵" },
-  { symbol: "USDC",  name: "USD Coin",         address: "EQB19ctZOjEGUmMq184j8WuwILyaXMF2TqL_RYURfHQNJjp3", decimals: 6, logo: "🔵" },
-] as const;
+interface Token {
+  contract_address: string;
+  symbol: string;
+  display_name: string;
+  image_url: string | null;
+  decimals: number;
+  kind: string;
+}
 
-type Token = typeof TOKENS[number];
+interface StonAssetsResponse {
+  asset_list: Array<Token & { deprecated?: boolean }>;
+}
+
+// ── TokenIcon ─────────────────────────────────────────────────────────────────
+
+function TokenIcon({ token, size }: { token: Token; size: number }) {
+  if (token.image_url) {
+    return (
+      <img
+        src={token.image_url}
+        alt={token.symbol}
+        width={size}
+        height={size}
+        style={{ borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+      />
+    );
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: "rgba(0,152,234,0.2)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: Math.round(size * 0.45), fontWeight: 700, color: "#0098EA", flexShrink: 0,
+    }}>
+      {token.symbol[0]}
+    </div>
+  );
+}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -62,8 +92,9 @@ export default function SwapCalculator() {
   const walletAddress  = useTonAddress();
   const tonBalance     = useTonBalance();
 
-  const [fromToken, setFromToken] = useState<Token>(TOKENS[0]);
-  const [toToken,   setToToken]   = useState<Token>(TOKENS[1]);
+  const [assets,    setAssets]    = useState<Token[]>([]);
+  const [fromToken, setFromToken] = useState<Token | null>(null);
+  const [toToken,   setToToken]   = useState<Token | null>(null);
   const [fromAmt,   setFromAmt]   = useState("");
   const [toAmt,     setToAmt]     = useState("");
   const [tonPrice,  setTonPrice]  = useState(0);
@@ -73,13 +104,32 @@ export default function SwapCalculator() {
   const [txState,  setTxState]  = useState<TxState>("idle");
   const [errMsg,   setErrMsg]   = useState("");
 
-  const [showPreview,   setShowPreview]   = useState(false);
-  const [fromDropOpen,  setFromDropOpen]  = useState(false);
-  const [toDropOpen,    setToDropOpen]    = useState(false);
-  const [fromSearch,    setFromSearch]    = useState("");
-  const [toSearch,      setToSearch]      = useState("");
+  const [showPreview,  setShowPreview]  = useState(false);
+  const [fromDropOpen, setFromDropOpen] = useState(false);
+  const [toDropOpen,   setToDropOpen]   = useState(false);
+  const [fromSearch,   setFromSearch]   = useState("");
+  const [toSearch,     setToSearch]     = useState("");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch STON.fi assets on mount
+  useEffect(() => {
+    fetch("https://api.ston.fi/v1/assets")
+      .then(r => r.json())
+      .then((d: StonAssetsResponse) => {
+        const list = (d.asset_list ?? [])
+          .filter(a => (a.kind === "Jetton" || a.kind === "Ton") && !a.deprecated)
+          .sort((a, b) => {
+            if (a.kind === "Ton") return -1;
+            if (b.kind === "Ton") return 1;
+            return a.symbol.localeCompare(b.symbol);
+          });
+        setAssets(list);
+        setFromToken(list.find(a => a.kind === "Ton") ?? list[0] ?? null);
+        setToToken(list.find(a => a.symbol === "USDT") ?? list[1] ?? null);
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch TON price for USD estimates
   useEffect(() => {
@@ -97,12 +147,13 @@ export default function SwapCalculator() {
   }, []);
 
   async function runSimulate() {
+    if (!fromToken || !toToken) return;
     setSimState("loading");
     try {
       const units = BigInt(Math.round(parseFloat(fromAmt) * 10 ** fromToken.decimals)).toString();
       const params = new URLSearchParams({
-        offer_address: fromToken.address,
-        ask_address:   toToken.address,
+        offer_address:      fromToken.contract_address,
+        ask_address:        toToken.contract_address,
         units,
         slippage_tolerance: "0.05",
       });
@@ -133,13 +184,11 @@ export default function SwapCalculator() {
     debounceRef.current = setTimeout(() => void runSimulate(), 500);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromAmt, fromToken.address, toToken.address]);
+  }, [fromAmt, fromToken?.contract_address, toToken?.contract_address]);
 
   function flipTokens() {
-    const prevFrom = fromToken;
-    const prevTo   = toToken;
-    setFromToken(prevTo);
-    setToToken(prevFrom);
+    setFromToken(toToken);
+    setToToken(fromToken);
     setFromAmt(toAmt);
     setToAmt(fromAmt);
     setSimData(null);
@@ -153,16 +202,17 @@ export default function SwapCalculator() {
   }
 
   function handleSwapClick() {
+    if (!fromToken || !toToken) return;
     const amt = parseFloat(fromAmt);
     if (!fromAmt || isNaN(amt) || amt <= 0 || !simData) return;
 
-    if (fromToken.symbol === "TON" && amt < 0.1) {
+    if (fromToken.kind === "Ton" && amt < 0.1) {
       setErrMsg("Minimum amount is 0.1 TON");
       setTxState("error");
       setTimeout(() => setTxState("idle"), 3000);
       return;
     }
-    if (fromToken.symbol === "TON" && tonBalance !== null && amt > tonBalance) {
+    if (fromToken.kind === "Ton" && tonBalance !== null && amt > tonBalance) {
       setErrMsg("Insufficient balance");
       setTxState("error");
       setTimeout(() => setTxState("idle"), 3000);
@@ -172,7 +222,7 @@ export default function SwapCalculator() {
   }
 
   async function handleConfirm() {
-    if (!walletAddress || !simData) return;
+    if (!walletAddress || !simData || !fromToken || !toToken) return;
     setShowPreview(false);
     setTxState("sending");
 
@@ -183,19 +233,19 @@ export default function SwapCalculator() {
       const minAsk   = BigInt(simData.min_ask_units);
 
       let txParams;
-      if (fromToken.symbol === "TON") {
+      if (fromToken.kind === "Ton") {
         txParams = await router.getSwapTonToJettonTxParams({
           userWalletAddress: walletAddress,
           proxyTon,
           offerAmount:      toNano(fromAmt),
-          askJettonAddress: toToken.address,
+          askJettonAddress: toToken.contract_address,
           minAskAmount:     minAsk,
         });
-      } else if (toToken.symbol === "TON") {
+      } else if (toToken.kind === "Ton") {
         const offerUnits = BigInt(Math.round(parseFloat(fromAmt) * 10 ** fromToken.decimals));
         txParams = await router.getSwapJettonToTonTxParams({
           userWalletAddress:  walletAddress,
-          offerJettonAddress: fromToken.address,
+          offerJettonAddress: fromToken.contract_address,
           offerAmount:        offerUnits,
           proxyTon,
           minAskAmount:       minAsk,
@@ -204,9 +254,9 @@ export default function SwapCalculator() {
         const offerUnits = BigInt(Math.round(parseFloat(fromAmt) * 10 ** fromToken.decimals));
         txParams = await router.getSwapJettonToJettonTxParams({
           userWalletAddress:  walletAddress,
-          offerJettonAddress: fromToken.address,
+          offerJettonAddress: fromToken.contract_address,
           offerAmount:        offerUnits,
-          askJettonAddress:   toToken.address,
+          askJettonAddress:   toToken.contract_address,
           minAskAmount:       minAsk,
         });
       }
@@ -229,22 +279,23 @@ export default function SwapCalculator() {
     }
   }
 
-  // Derived values
-  const fromFiltered = TOKENS.filter(t =>
-    t.symbol !== toToken.symbol &&
+  // ── Derived values ────────────────────────────────────────────────────────────
+
+  const fromFiltered = assets.filter(t =>
+    t.contract_address !== toToken?.contract_address &&
     (t.symbol.toLowerCase().includes(fromSearch.toLowerCase()) ||
-     t.name.toLowerCase().includes(fromSearch.toLowerCase()))
+     t.display_name.toLowerCase().includes(fromSearch.toLowerCase()))
   );
-  const toFiltered = TOKENS.filter(t =>
-    t.symbol !== fromToken.symbol &&
+  const toFiltered = assets.filter(t =>
+    t.contract_address !== fromToken?.contract_address &&
     (t.symbol.toLowerCase().includes(toSearch.toLowerCase()) ||
-     t.name.toLowerCase().includes(toSearch.toLowerCase()))
+     t.display_name.toLowerCase().includes(toSearch.toLowerCase()))
   );
 
-  const computedRate = simData && fromAmt
+  const computedRate = simData && fromAmt && fromToken && toToken
     ? parseFloat(simData.ask_units) / 10 ** toToken.decimals / parseFloat(fromAmt)
     : null;
-  const rateStr = computedRate !== null
+  const rateStr = computedRate !== null && fromToken && toToken
     ? `1 ${fromToken.symbol} = ${computedRate.toFixed(6)} ${toToken.symbol}`
     : null;
 
@@ -252,20 +303,79 @@ export default function SwapCalculator() {
     ? `${(parseFloat(simData.fee_percent) * 100).toFixed(3)}%`
     : "~0.15%";
 
-  const minReceived = simData
+  const minReceived = simData && toToken
     ? (parseFloat(simData.min_ask_units) / 10 ** toToken.decimals).toFixed(toToken.decimals === 6 ? 4 : 6)
     : "0";
 
   const toUsd = (() => {
+    if (!toToken) return "";
     const n = parseFloat(toAmt || "0");
     if (!n) return "";
-    if (toToken.symbol === "USDT" || toToken.symbol === "USDC") return `≈ $${n.toFixed(2)}`;
-    if (tonPrice && (toToken.symbol === "TON" || toToken.symbol === "tsTON" || toToken.symbol === "stTON"))
+    if (toToken.symbol.toUpperCase().includes("USD")) return `≈ $${n.toFixed(2)}`;
+    if (tonPrice && (toToken.kind === "Ton" || toToken.symbol.toUpperCase() === "TSTON" || toToken.symbol.toUpperCase() === "STTON"))
       return `≈ $${(n * tonPrice).toFixed(2)}`;
     return "";
   })();
 
-  const showFromBalance = wallet && tonBalance !== null && fromToken.symbol === "TON";
+  const showFromBalance = wallet && tonBalance !== null && fromToken?.kind === "Ton";
+
+  // ── Reusable dropdown list (avoids duplicating 60 lines of JSX) ───────────────
+
+  function TokenDropdown({
+    filtered,
+    selected,
+    onSelect,
+    search,
+    onSearch,
+  }: {
+    filtered: Token[];
+    selected: Token | null;
+    onSelect: (t: Token) => void;
+    search: string;
+    onSearch: (v: string) => void;
+  }) {
+    return (
+      <div
+        className="absolute top-full left-0 mt-1 z-50 w-64 rounded-2xl"
+        style={{ ...glass, boxShadow: "0 8px 40px rgba(0,0,0,0.6)", maxHeight: 320, overflowY: "auto" }}
+      >
+        <div
+          className="p-2 sticky top-0"
+          style={{ background: "rgba(8,8,16,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <input
+            autoFocus
+            className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+            placeholder="Search token…"
+            value={search}
+            onChange={e => onSearch(e.target.value)}
+          />
+        </div>
+        {filtered.length === 0 && (
+          <div style={{ padding: "14px 16px", color: "rgba(255,255,255,0.3)", fontSize: 13, textAlign: "center" }}>
+            No tokens found
+          </div>
+        )}
+        {filtered.map(t => (
+          <button
+            key={t.contract_address}
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
+            style={{ background: t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent" }}
+            onClick={() => onSelect(t)}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent"; }}
+          >
+            <TokenIcon token={t} size={28} />
+            <div>
+              <div style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{t.symbol}</div>
+              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t.display_name}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   // ── Success state ────────────────────────────────────────────────────────────
 
@@ -275,7 +385,7 @@ export default function SwapCalculator() {
         <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
         <p style={{ color: "#22C55E", fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Swap sent!</p>
         <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginBottom: 20 }}>
-          Check your wallet for {toToken.symbol}
+          Check your wallet for {toToken?.symbol}
         </p>
         <button
           onClick={() => { setTxState("idle"); setFromAmt(""); setToAmt(""); setSimData(null); setSimState("idle"); }}
@@ -305,48 +415,32 @@ export default function SwapCalculator() {
 
         {/* ── From card ─────────────────────────────────────────────────────── */}
         <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
-          {/* Single row: token selector left, amount input right */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => { setFromDropOpen(v => !v); setToDropOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 100 }}
               >
-                <span style={{ fontSize: 18 }}>{fromToken.logo}</span>
-                <span style={{ fontWeight: 600, fontSize: 14 }}>{fromToken.symbol}</span>
+                {fromToken ? (
+                  <>
+                    <TokenIcon token={fromToken} size={20} />
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{fromToken.symbol}</span>
+                  </>
+                ) : (
+                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading…</span>
+                )}
                 <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
               </button>
 
               {fromDropOpen && (
-                <div className="absolute top-full left-0 mt-1 z-50 w-56 rounded-2xl overflow-hidden" style={{ ...glass, boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}>
-                  <div className="p-2">
-                    <input
-                      autoFocus
-                      className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
-                      placeholder="Search token..."
-                      value={fromSearch}
-                      onChange={e => setFromSearch(e.target.value)}
-                    />
-                  </div>
-                  {fromFiltered.map(t => (
-                    <button
-                      key={t.symbol}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors"
-                      style={{ background: t.symbol === fromToken.symbol ? "rgba(0,152,234,0.1)" : "transparent" }}
-                      onClick={() => { setFromToken(t); setFromDropOpen(false); setFromSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = t.symbol === fromToken.symbol ? "rgba(0,152,234,0.1)" : "transparent"; }}
-                    >
-                      <span style={{ fontSize: 20 }}>{t.logo}</span>
-                      <div>
-                        <div style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{t.symbol}</div>
-                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t.name}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <TokenDropdown
+                  filtered={fromFiltered}
+                  selected={fromToken}
+                  search={fromSearch}
+                  onSearch={setFromSearch}
+                  onSelect={t => { setFromToken(t); setFromDropOpen(false); setFromSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
+                />
               )}
             </div>
 
@@ -416,48 +510,32 @@ export default function SwapCalculator() {
 
         {/* ── To card ───────────────────────────────────────────────────────── */}
         <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
-          {/* Single row: token selector left, amount display right */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => { setToDropOpen(v => !v); setFromDropOpen(false); }}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 100 }}
               >
-                <span style={{ fontSize: 18 }}>{toToken.logo}</span>
-                <span style={{ fontWeight: 600, fontSize: 14 }}>{toToken.symbol}</span>
+                {toToken ? (
+                  <>
+                    <TokenIcon token={toToken} size={20} />
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{toToken.symbol}</span>
+                  </>
+                ) : (
+                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading…</span>
+                )}
                 <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
               </button>
 
               {toDropOpen && (
-                <div className="absolute top-full left-0 mt-1 z-50 w-56 rounded-2xl overflow-hidden" style={{ ...glass, boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}>
-                  <div className="p-2">
-                    <input
-                      autoFocus
-                      className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
-                      placeholder="Search token..."
-                      value={toSearch}
-                      onChange={e => setToSearch(e.target.value)}
-                    />
-                  </div>
-                  {toFiltered.map(t => (
-                    <button
-                      key={t.symbol}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors"
-                      style={{ background: t.symbol === toToken.symbol ? "rgba(0,152,234,0.1)" : "transparent" }}
-                      onClick={() => { setToToken(t); setToDropOpen(false); setToSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = t.symbol === toToken.symbol ? "rgba(0,152,234,0.1)" : "transparent"; }}
-                    >
-                      <span style={{ fontSize: 20 }}>{t.logo}</span>
-                      <div>
-                        <div style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{t.symbol}</div>
-                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t.name}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <TokenDropdown
+                  filtered={toFiltered}
+                  selected={toToken}
+                  search={toSearch}
+                  onSearch={setToSearch}
+                  onSelect={t => { setToToken(t); setToDropOpen(false); setToSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
+                />
               )}
             </div>
 
@@ -534,7 +612,7 @@ export default function SwapCalculator() {
         ) : (
           <button
             onClick={handleSwapClick}
-            disabled={!fromAmt || simState !== "ready"}
+            disabled={!fromAmt || simState !== "ready" || !fromToken || !toToken}
             className="w-full py-4 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.01] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             style={{
               background: "linear-gradient(135deg, #0098EA, #0077BB)",
@@ -544,13 +622,13 @@ export default function SwapCalculator() {
           >
             {simState === "loading"
               ? "Fetching rate…"
-              : `Swap ${fromToken.symbol} → ${toToken.symbol}`}
+              : `Swap ${fromToken?.symbol ?? "…"} → ${toToken?.symbol ?? "…"}`}
           </button>
         )}
       </div>
 
       {/* ── Preview modal ────────────────────────────────────────────────────── */}
-      {showPreview && simData && (
+      {showPreview && simData && fromToken && toToken && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
@@ -572,12 +650,12 @@ export default function SwapCalculator() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { label: "You send",        value: `${fromAmt} ${fromToken.symbol}`,  color: "#fff"                    },
-                { label: "You receive",     value: `~${toAmt} ${toToken.symbol}`,     color: "#22C55E"                 },
-                { label: "Exchange rate",   value: rateStr ?? "—",                    color: "rgba(255,255,255,0.65)"  },
-                { label: "Min received",    value: `${minReceived} ${toToken.symbol}`, color: "rgba(255,255,255,0.5)"  },
-                { label: "Ston.fi fee",     value: feeStr,                            color: "rgba(255,255,255,0.5)"  },
-                { label: "Network fee",     value: "~0.1 TON",                        color: "rgba(255,255,255,0.5)"  },
+                { label: "You send",      value: `${fromAmt} ${fromToken.symbol}`,   color: "#fff"                   },
+                { label: "You receive",   value: `~${toAmt} ${toToken.symbol}`,      color: "#22C55E"                },
+                { label: "Exchange rate", value: rateStr ?? "—",                     color: "rgba(255,255,255,0.65)" },
+                { label: "Min received",  value: `${minReceived} ${toToken.symbol}`, color: "rgba(255,255,255,0.5)"  },
+                { label: "Ston.fi fee",   value: feeStr,                             color: "rgba(255,255,255,0.5)"  },
+                { label: "Network fee",   value: "~0.1 TON",                         color: "rgba(255,255,255,0.5)"  },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>{label}</span>
