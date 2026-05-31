@@ -266,14 +266,9 @@ export default function FutureROICalculator() {
           className="flex items-center justify-between rounded-xl px-4 py-3"
           style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Current APY
-            </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>
-              Annual Percentage Yield — your yearly earnings rate
-            </span>
-          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+            Current APY
+          </span>
           {isLoading ? (
             <div className="h-6 w-16 rounded-md bg-white/10 animate-pulse flex-shrink-0" />
           ) : apy === null ? (

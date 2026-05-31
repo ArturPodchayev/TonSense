@@ -3,16 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchTonPrice, fetchStakingAPY, type StakingApyData } from "@/lib/api";
 
-function formatAgeLabel(asOf: string): string {
-  const deltaMs = Date.now() - new Date(asOf).getTime();
-  if (!Number.isFinite(deltaMs) || deltaMs < 0) return "Updated just now";
-  const seconds = Math.floor(deltaMs / 1000);
-  if (seconds < 60) return "Updated just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `Updated ${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  return `Updated ${hours}h ago`;
-}
 
 export default function LiveStats() {
   const [price, setPrice] = useState<number | null>(null);
@@ -135,25 +125,8 @@ export default function LiveStats() {
               <p className="text-xl sm:text-3xl font-black leading-none mb-2" style={{ color: "#22C55E" }}>
                 {apyData.apy.toFixed(1)}%
               </p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  tsTON annual
-                </p>
-                {apyData.source === "cache" && (
-                  <span
-                    className="text-[10px] px-1.5 py-0.5 rounded-full"
-                    style={{
-                      color: "#FDE68A",
-                      background: "rgba(253,230,138,0.08)",
-                      border: "1px solid rgba(253,230,138,0.25)",
-                    }}
-                  >
-                    Cached
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-                {formatAgeLabel(apyData.asOf)}
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                tsTON annual
               </p>
             </>
           )}
