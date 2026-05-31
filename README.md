@@ -12,14 +12,16 @@
 
 ## Features
 
-- **📈 Dashboard** — Real-time TON price, 24h change, and tsTON staking APY from Tonstakers
-- **🕐 What If Calculator** — FOMO analysis: see exactly what you would have earned by staking N days ago
-- **🤖 AI Agent** — DeepSeek-powered DeFi advisor with live price & APY context injected per message
-- **⚡ Swap** — Ston.fi DEX integration with live rate simulation and on-chain swap execution
-- **📅 DCA Simulator** — Dollar cost averaging calculator with projected returns
-- **👤 Profile** — Wallet identity, TON balance, transaction history, and portfolio overview
-- **🔔 Smart Alerts** — Telegram bot alerts when TON price or APY hits your target (powered by Upstash Redis + Vercel Cron)
-- **💎 On-chain Staking** — Real Tonstakers transactions built and signed via TON Connect
+- **Dashboard** — Real-time TON price (24h change) and tsTON staking APY; AI Analysis card with verdict, risk, and action
+- **What If Calculator** — FOMO analysis: see what you would have earned by staking N days ago, with AI Analysis
+- **Future ROI Calculator** — Portfolio value over time chart with all four forecast periods (1, 3, 6, 12 months) overlaid simultaneously
+- **AI Agent** — DeepSeek-powered DeFi advisor with live price, APY, and wallet context injected per message
+- **Swap** — Multi-token swap via Ston.fi: TON, USDT, USDC, tsTON, NOT, SCALE — live rate simulation and on-chain execution
+- **DCA Simulator** — Dollar cost averaging calculator with projected returns
+- **Profile** — Wallet identity, TON balance, transaction history, and portfolio overview
+- **Smart Alerts** — Telegram bot alerts when TON price or APY hits your target (Upstash Redis + Vercel Cron)
+- **On-chain Staking** — Real Tonstakers transactions built and signed via TON Connect
+- **Terms of Use** — Standalone legal page covering financial disclaimers, on-chain transaction responsibility, and third-party service disclosures
 
 ---
 
@@ -51,7 +53,7 @@
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 App Router + TypeScript |
+| Framework | Next.js 16 App Router + TypeScript 5 |
 | Styling | Tailwind CSS + Glassmorphism |
 | Charts | Recharts |
 | Wallet | TON Connect 2.0 |
