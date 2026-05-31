@@ -76,7 +76,7 @@ export default function FutureROICalculator() {
   const [amount, setAmount] = useState<string>("");
   const [debouncedAmount, setDebouncedAmount] = useState<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [selectedPeriods, setSelectedPeriods] = useState<number[]>([1, 3, 12]);
+  const [selectedPeriods, setSelectedPeriods] = useState<number[]>([1, 3, 6, 12]);
   const [periodHint, setPeriodHint] = useState(false);
   const walletBalance = useTonBalance();
   const [apy, setApy] = useState<number | null>(null);
