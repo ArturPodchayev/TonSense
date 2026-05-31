@@ -294,7 +294,7 @@ export default function WhatIfCalculator() {
             />
             <ResultCard
               label="Difference"
-              value={`${results.diff >= 0 ? "🚀 +" : ""}$${fmt2(Math.abs(results.diff))}`}
+              value={`${results.diff >= 0 ? "+" : ""}$${fmt2(Math.abs(results.diff))}`}
               accent={results.diff >= 0 ? "green" : "red"}
             />
           </div>

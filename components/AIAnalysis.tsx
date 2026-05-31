@@ -67,7 +67,7 @@ export default function AIAnalysis({ tonPrice, change24h, apy, userAmount, mode 
             backgroundClip: "text",
           }}
         >
-          🤖 AI Analysis
+          AI Analysis
         </span>
         <span
           className="text-[11px] font-medium px-2.5 py-1 rounded-full"
@@ -96,32 +96,23 @@ export default function AIAnalysis({ tonPrice, change24h, apy, userAmount, mode 
         </div>
       ) : analysis ? (
         <div className="space-y-4">
-          <div className="flex gap-3 items-start">
-            <span className="text-lg leading-none">🎯</span>
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Verdict</p>
-              <p className="text-sm font-medium text-white">{analysis.verdict}</p>
-            </div>
+          <div>
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Verdict</p>
+            <p className="text-sm font-medium text-white">{analysis.verdict}</p>
           </div>
 
           <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.05)" }} />
 
-          <div className="flex gap-3 items-start">
-            <span className="text-lg leading-none">⚠️</span>
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Risk</p>
-              <p className="text-sm font-medium" style={{ color: "#EF4444" }}>{analysis.risk}</p>
-            </div>
+          <div>
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Risk</p>
+            <p className="text-sm font-medium" style={{ color: "#EF4444" }}>{analysis.risk}</p>
           </div>
 
           <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.05)" }} />
 
-          <div className="flex gap-3 items-start">
-            <span className="text-lg leading-none">💡</span>
-            <div>
-              <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Action</p>
-              <p className="text-sm font-medium" style={{ color: "#22C55E" }}>{analysis.action}</p>
-            </div>
+          <div>
+            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Action</p>
+            <p className="text-sm font-medium" style={{ color: "#22C55E" }}>{analysis.action}</p>
           </div>
         </div>
       ) : null}

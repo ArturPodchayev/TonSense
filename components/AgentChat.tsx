@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { fetchTonPrice, fetchStakingAPY } from "@/lib/api";
 import { useTonBalance } from "@/hooks/useTonBalance";
 import { useTonAddress } from "@tonconnect/ui-react";
@@ -125,7 +126,7 @@ export default function AgentChat() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
             style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", color: "#A78BFA" }}
           >
-            💎 {walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON
+            {walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TON
           </div>
         )}
       </div>
@@ -138,10 +139,10 @@ export default function AgentChat() {
           {!hasMessages && (
             <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 py-6">
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden"
                 style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(0,152,234,0.2))", border: "1px solid rgba(124,58,237,0.3)" }}
               >
-                🤖
+                <Image src="/logo.png" alt="TonSense" width={48} height={48} style={{ borderRadius: 14 }} unoptimized />
               </div>
               <div>
                 <p className="text-sm font-semibold text-white mb-1">TonSenseAI Agent</p>
@@ -155,10 +156,10 @@ export default function AgentChat() {
             <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
                 <div
-                  className="w-7 h-7 rounded-xl flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+                  className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden"
                   style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,152,234,0.3))", border: "1px solid rgba(124,58,237,0.3)" }}
                 >
-                  🤖
+                  <Image src="/logo.png" alt="TonSense" width={28} height={28} style={{ borderRadius: 10 }} unoptimized />
                 </div>
               )}
               <div
@@ -178,10 +179,10 @@ export default function AgentChat() {
           {loading && (
             <div className="flex gap-2.5 justify-start">
               <div
-                className="w-7 h-7 rounded-xl flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+                className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden"
                 style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,152,234,0.3))", border: "1px solid rgba(124,58,237,0.3)" }}
               >
-                🤖
+                <Image src="/logo.png" alt="TonSense" width={28} height={28} style={{ borderRadius: 10 }} unoptimized />
               </div>
               <div
                 className="px-4 py-3 rounded-2xl flex items-center gap-1"

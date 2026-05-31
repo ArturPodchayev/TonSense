@@ -51,7 +51,7 @@ export default function TermsPage() {
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ color: "#fff", fontWeight: 800, fontSize: 26, marginBottom: 6 }}>
-            📄 Terms of Use
+            Terms of Use
           </h1>
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>Last updated: April 2026</p>
         </div>
@@ -61,7 +61,7 @@ export default function TermsPage() {
 
           {/* 1 */}
           <div style={{ padding: "4px 0 20px" }}>
-            <p style={sectionTitle}>⚠️ Not Financial Advice</p>
+            <p style={sectionTitle}>Not Financial Advice</p>
             <p style={body}>
               TonSense is an informational tool only. Nothing on this platform — including calculators,
               projections, AI responses, or market data — constitutes financial, investment, or legal
@@ -74,7 +74,7 @@ export default function TermsPage() {
 
           {/* 2 */}
           <div style={{ padding: "20px 0" }}>
-            <p style={sectionTitle}>📊 No Guarantees</p>
+            <p style={sectionTitle}>No Guarantees</p>
             <p style={body}>
               Past performance and APY projections do not guarantee future results. Cryptocurrency
               markets are volatile and staking yields can change at any time. TonSense makes no
@@ -87,27 +87,25 @@ export default function TermsPage() {
 
           {/* 3 */}
           <div style={{ padding: "20px 0" }}>
-            <p style={sectionTitle}>✅ Your Responsibility</p>
-            <ul style={{ ...body, paddingLeft: 18, margin: 0 }}>
-              <li style={{ marginBottom: 6 }}>
-                You are solely responsible for any transactions you initiate through your connected wallet.
-              </li>
-              <li style={{ marginBottom: 6 }}>
-                You must verify all transaction details — address, amount, and payload — before signing.
-                Blockchain transactions are irreversible.
-              </li>
-              <li>
-                You agree to comply with the laws of your jurisdiction regarding cryptocurrency usage,
-                trading, and taxation.
-              </li>
-            </ul>
+            <p style={sectionTitle}>Your Responsibility</p>
+            <p style={body}>
+              You are solely responsible for any transactions you initiate through your connected wallet.
+            </p>
+            <p style={{ ...body, marginTop: 8 }}>
+              You must verify all transaction details — address, amount, and payload — before signing.
+              Blockchain transactions are irreversible.
+            </p>
+            <p style={{ ...body, marginTop: 8 }}>
+              You agree to comply with the laws of your jurisdiction regarding cryptocurrency usage,
+              trading, and taxation.
+            </p>
           </div>
 
           <div style={divider} />
 
           {/* 4 */}
           <div style={{ padding: "20px 0" }}>
-            <p style={sectionTitle}>⛓️ On-Chain Transactions</p>
+            <p style={sectionTitle}>On-Chain Transactions</p>
             <p style={body}>
               When you use staking or swap features, TonSense constructs and submits transaction
               payloads to your connected TON wallet for signing. TonSense never holds your private
@@ -121,7 +119,7 @@ export default function TermsPage() {
 
           {/* 5 */}
           <div style={{ padding: "20px 0" }}>
-            <p style={sectionTitle}>🔗 Third-Party Services</p>
+            <p style={sectionTitle}>Third-Party Services</p>
             <p style={body}>
               TonSense integrates with external services including{" "}
               <span style={{ color: "rgba(255,255,255,0.7)" }}>Tonstakers</span> (liquid staking),{" "}
@@ -137,7 +135,7 @@ export default function TermsPage() {
 
           {/* 6 */}
           <div style={{ padding: "20px 0" }}>
-            <p style={sectionTitle}>🛡️ No Warranty</p>
+            <p style={sectionTitle}>No Warranty</p>
             <p style={body}>
               TonSense is provided &quot;as is&quot; without warranties of any kind, express or implied.
               We do not warrant that the service will be uninterrupted, error-free, or free from
@@ -151,7 +149,7 @@ export default function TermsPage() {
 
           {/* 7 */}
           <div style={{ padding: "20px 0 4px" }}>
-            <p style={sectionTitle}>📬 Contact</p>
+            <p style={sectionTitle}>Contact</p>
             <p style={body}>
               If you have questions about these terms or need help, reach out through our community:
             </p>
@@ -162,7 +160,7 @@ export default function TermsPage() {
                 rel="noopener noreferrer"
                 style={{ ...body, color: "#0098EA", textDecoration: "none" }}
               >
-                💬 Support Chat → t.me/+ls8wv93nO9swYjli
+                Support Chat → t.me/+ls8wv93nO9swYjli
               </a>
               <a
                 href="https://t.me/TonSense_official"
@@ -170,7 +168,7 @@ export default function TermsPage() {
                 rel="noopener noreferrer"
                 style={{ ...body, color: "#0098EA", textDecoration: "none" }}
               >
-                📢 Channel → t.me/TonSense_official
+                Channel → t.me/TonSense_official
               </a>
             </div>
           </div>
