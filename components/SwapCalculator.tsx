@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTonConnectUI, useTonAddress, useTonWallet } from "@tonconnect/ui-react";
 import { DEX, pTON } from "@ston-fi/sdk";
 import { TonClient } from "@ton/ton";
@@ -82,6 +82,82 @@ let _client: TonClient | null = null;
 function getClient() {
   if (!_client) _client = new TonClient({ endpoint: "https://toncenter.com/api/v2/jsonRPC" });
   return _client;
+}
+
+// ── TokenDropdown ─────────────────────────────────────────────────────────────
+
+interface TokenDropdownProps {
+  tokens: Token[];
+  selected: Token | null;
+  onChange: (t: Token) => void;
+  search: string;
+  onSearchChange: (v: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+function TokenDropdown({ tokens, selected, onChange, search, onSearchChange, isOpen, onToggle }: TokenDropdownProps) {
+  return (
+    <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-2 px-3 py-2 rounded-xl"
+        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 100 }}
+      >
+        {selected ? (
+          <>
+            <TokenIcon token={selected} size={20} />
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{selected.symbol}</span>
+          </>
+        ) : (
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading…</span>
+        )}
+        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute top-full left-0 mt-1 z-50 w-64 rounded-2xl"
+          style={{ ...glass, boxShadow: "0 8px 40px rgba(0,0,0,0.6)", maxHeight: 320, overflowY: "auto" }}
+        >
+          <div
+            className="p-2 sticky top-0"
+            style={{ background: "rgba(8,8,16,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <input
+              autoFocus
+              className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+              placeholder="Search token…"
+              value={search}
+              onChange={e => onSearchChange(e.target.value)}
+            />
+          </div>
+          {tokens.length === 0 && (
+            <div style={{ padding: "14px 16px", color: "rgba(255,255,255,0.3)", fontSize: 13, textAlign: "center" }}>
+              No tokens found
+            </div>
+          )}
+          {tokens.map(t => (
+            <button
+              key={t.contract_address}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
+              style={{ background: t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent" }}
+              onClick={() => onChange(t)}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent"; }}
+            >
+              <TokenIcon token={t} size={28} />
+              <div>
+                <div style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{t.symbol}</div>
+                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t.display_name}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -281,15 +357,26 @@ export default function SwapCalculator() {
 
   // ── Derived values ────────────────────────────────────────────────────────────
 
-  const fromFiltered = assets.filter(t =>
-    t.contract_address !== toToken?.contract_address &&
-    (t.symbol.toLowerCase().includes(fromSearch.toLowerCase()) ||
-     t.display_name.toLowerCase().includes(fromSearch.toLowerCase()))
+  const fromFiltered = useMemo(() =>
+    assets
+      .filter(t =>
+        t.contract_address !== toToken?.contract_address &&
+        (t.symbol.toLowerCase().includes(fromSearch.toLowerCase()) ||
+         t.display_name.toLowerCase().includes(fromSearch.toLowerCase()))
+      )
+      .slice(0, 50),
+    [assets, toToken?.contract_address, fromSearch]
   );
-  const toFiltered = assets.filter(t =>
-    t.contract_address !== fromToken?.contract_address &&
-    (t.symbol.toLowerCase().includes(toSearch.toLowerCase()) ||
-     t.display_name.toLowerCase().includes(toSearch.toLowerCase()))
+
+  const toFiltered = useMemo(() =>
+    assets
+      .filter(t =>
+        t.contract_address !== fromToken?.contract_address &&
+        (t.symbol.toLowerCase().includes(toSearch.toLowerCase()) ||
+         t.display_name.toLowerCase().includes(toSearch.toLowerCase()))
+      )
+      .slice(0, 50),
+    [assets, fromToken?.contract_address, toSearch]
   );
 
   const computedRate = simData && fromAmt && fromToken && toToken
@@ -318,64 +405,6 @@ export default function SwapCalculator() {
   })();
 
   const showFromBalance = wallet && tonBalance !== null && fromToken?.kind === "Ton";
-
-  // ── Reusable dropdown list (avoids duplicating 60 lines of JSX) ───────────────
-
-  function TokenDropdown({
-    filtered,
-    selected,
-    onSelect,
-    search,
-    onSearch,
-  }: {
-    filtered: Token[];
-    selected: Token | null;
-    onSelect: (t: Token) => void;
-    search: string;
-    onSearch: (v: string) => void;
-  }) {
-    return (
-      <div
-        className="absolute top-full left-0 mt-1 z-50 w-64 rounded-2xl"
-        style={{ ...glass, boxShadow: "0 8px 40px rgba(0,0,0,0.6)", maxHeight: 320, overflowY: "auto" }}
-      >
-        <div
-          className="p-2 sticky top-0"
-          style={{ background: "rgba(8,8,16,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <input
-            autoFocus
-            className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
-            placeholder="Search token…"
-            value={search}
-            onChange={e => onSearch(e.target.value)}
-          />
-        </div>
-        {filtered.length === 0 && (
-          <div style={{ padding: "14px 16px", color: "rgba(255,255,255,0.3)", fontSize: 13, textAlign: "center" }}>
-            No tokens found
-          </div>
-        )}
-        {filtered.map(t => (
-          <button
-            key={t.contract_address}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
-            style={{ background: t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent" }}
-            onClick={() => onSelect(t)}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = t.contract_address === selected?.contract_address ? "rgba(0,152,234,0.1)" : "transparent"; }}
-          >
-            <TokenIcon token={t} size={28} />
-            <div>
-              <div style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{t.symbol}</div>
-              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>{t.display_name}</div>
-            </div>
-          </button>
-        ))}
-      </div>
-    );
-  }
 
   // ── Success state ────────────────────────────────────────────────────────────
 
@@ -416,33 +445,15 @@ export default function SwapCalculator() {
         {/* ── From card ─────────────────────────────────────────────────────── */}
         <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => { setFromDropOpen(v => !v); setToDropOpen(false); }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 100 }}
-              >
-                {fromToken ? (
-                  <>
-                    <TokenIcon token={fromToken} size={20} />
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{fromToken.symbol}</span>
-                  </>
-                ) : (
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading…</span>
-                )}
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
-              </button>
-
-              {fromDropOpen && (
-                <TokenDropdown
-                  filtered={fromFiltered}
-                  selected={fromToken}
-                  search={fromSearch}
-                  onSearch={setFromSearch}
-                  onSelect={t => { setFromToken(t); setFromDropOpen(false); setFromSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
-                />
-              )}
-            </div>
+            <TokenDropdown
+              tokens={fromFiltered}
+              selected={fromToken}
+              onChange={t => { setFromToken(t); setFromDropOpen(false); setFromSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
+              search={fromSearch}
+              onSearchChange={setFromSearch}
+              isOpen={fromDropOpen}
+              onToggle={() => { setFromDropOpen(v => !v); setToDropOpen(false); }}
+            />
 
             <input
               type="number"
@@ -511,33 +522,15 @@ export default function SwapCalculator() {
         {/* ── To card ───────────────────────────────────────────────────────── */}
         <div className="rounded-2xl" style={{ ...glass, padding: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => { setToDropOpen(v => !v); setFromDropOpen(false); }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", minWidth: 100 }}
-              >
-                {toToken ? (
-                  <>
-                    <TokenIcon token={toToken} size={20} />
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{toToken.symbol}</span>
-                  </>
-                ) : (
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading…</span>
-                )}
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, marginLeft: 6 }}>▾</span>
-              </button>
-
-              {toDropOpen && (
-                <TokenDropdown
-                  filtered={toFiltered}
-                  selected={toToken}
-                  search={toSearch}
-                  onSearch={setToSearch}
-                  onSelect={t => { setToToken(t); setToDropOpen(false); setToSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
-                />
-              )}
-            </div>
+            <TokenDropdown
+              tokens={toFiltered}
+              selected={toToken}
+              onChange={t => { setToToken(t); setToDropOpen(false); setToSearch(""); setSimData(null); setToAmt(""); setSimState("idle"); }}
+              search={toSearch}
+              onSearchChange={setToSearch}
+              isOpen={toDropOpen}
+              onToggle={() => { setToDropOpen(v => !v); setFromDropOpen(false); }}
+            />
 
             <div style={{
               flex: 1,
