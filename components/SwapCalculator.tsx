@@ -289,7 +289,6 @@ export default function SwapCalculator() {
           proxyTon,
           minAskAmount:       minAsk,
           referralAddress:    TONSENSE_REFERRAL_ADDRESS,
-          referralValue:      TONSENSE_REFERRAL_VALUE,
         });
       } else {
         const offerUnits = BigInt(Math.round(parseFloat(fromAmt) * 10 ** fromToken.decimals));
@@ -300,7 +299,6 @@ export default function SwapCalculator() {
           askJettonAddress:   toToken.contract_address,
           minAskAmount:       minAsk,
           referralAddress:    TONSENSE_REFERRAL_ADDRESS,
-          referralValue:      TONSENSE_REFERRAL_VALUE,
         });
       }
 
