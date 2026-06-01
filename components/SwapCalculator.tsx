@@ -6,7 +6,7 @@ import { DEX, pTON } from "@ston-fi/sdk";
 import { TonClient } from "@ton/ton";
 import { toNano } from "@ton/core";
 import { useTonBalance } from "@/hooks/useTonBalance";
-import { TONSENSE_REFERRAL_ADDRESS, TONSENSE_REFERRAL_VALUE } from "@/lib/referral";
+import { TONSENSE_REFERRAL_ADDRESS } from "@/lib/referral";
 
 // ── Token list ────────────────────────────────────────────────────────────────
 
@@ -279,7 +279,6 @@ export default function SwapCalculator() {
           askJettonAddress: toToken.contract_address,
           minAskAmount:     minAsk,
           referralAddress:  TONSENSE_REFERRAL_ADDRESS,
-          referralValue:    TONSENSE_REFERRAL_VALUE,
         });
       } else if (toToken.kind === "Ton") {
         const offerUnits = BigInt(Math.round(parseFloat(fromAmt) * 10 ** fromToken.decimals));
