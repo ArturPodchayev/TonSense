@@ -7,26 +7,7 @@ import { TonClient } from "@ton/ton";
 import { toNano } from "@ton/core";
 import { useTonBalance } from "@/hooks/useTonBalance";
 import { TONSENSE_REFERRAL_ADDRESS } from "@/lib/referral";
-
-// ── Token list ────────────────────────────────────────────────────────────────
-
-interface Token {
-  symbol: string;
-  display_name: string;
-  contract_address: string;
-  decimals: number;
-  kind: string;
-  image_url: string;
-}
-
-const TOKENS: Token[] = [
-  { symbol: "TON",   display_name: "Toncoin",         contract_address: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",   decimals: 9, kind: "Ton",    image_url: "https://assets.ston.fi/images/EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c/image.png" },
-  { symbol: "USDT",  display_name: "Tether USD",       contract_address: "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs", decimals: 6, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs/image.png" },
-  { symbol: "USDC",  display_name: "USD Coin",         contract_address: "EQC61aVMaYWNMNFMDFKHHsAiAWiNDjzfA0KwUyc5UUQBE1Vq", decimals: 6, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQC61aVMaYWNMNFMDFKHHsAiAWiNDjzfA0KwUyc5UUQBE1Vq/image.png" },
-  { symbol: "tsTON", display_name: "Tonstakers TON",   contract_address: "EQC98_qAmNEptmzSMQMHMgMKUFSf14sHBSKhHCnIBFqRoGS6",  decimals: 9, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQC98_qAmNEptmzSMQMHMgMKUFSf14sHBSKhHCnIBFqRoGS6/image.png" },
-  { symbol: "NOT",   display_name: "Notcoin",          contract_address: "EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT",   decimals: 9, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM__NOT/image.png" },
-  { symbol: "SCALE", display_name: "Ston.fi",          contract_address: "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE",   decimals: 9, kind: "Jetton", image_url: "https://assets.ston.fi/images/EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE/image.png" },
-];
+import { type Token, TOKENS } from "@/lib/tokens";
 
 // ── TokenIcon ─────────────────────────────────────────────────────────────────
 
@@ -147,9 +128,22 @@ function getClient() {
   return _client;
 }
 
+// ── Prefill ───────────────────────────────────────────────────────────────────
+
+export interface SwapPrefill {
+  fromSymbol: string;
+  toSymbol: string;
+  amount: string;
+}
+
+interface Props {
+  prefill?: SwapPrefill | null;
+  onPrefillConsumed?: () => void;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function SwapCalculator() {
+export default function SwapCalculator({ prefill, onPrefillConsumed }: Props) {
   const [tonConnectUI] = useTonConnectUI();
   const wallet         = useTonWallet();
   const walletAddress  = useTonAddress();
@@ -177,6 +171,18 @@ export default function SwapCalculator() {
       if (t.image_url) { const img = new Image(); img.src = t.image_url; }
     });
   }, []);
+
+  // Apply prefill from AI Agent swap intent
+  useEffect(() => {
+    if (!prefill) return;
+    const from = TOKENS.find(t => t.symbol === prefill.fromSymbol);
+    const to   = TOKENS.find(t => t.symbol === prefill.toSymbol);
+    if (from) setFromToken(from);
+    if (to)   setToToken(to);
+    if (prefill.amount) setFromAmt(prefill.amount);
+    onPrefillConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill]);
 
   // Fetch TON price for USD estimates
   useEffect(() => {

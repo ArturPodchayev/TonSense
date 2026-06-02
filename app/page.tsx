@@ -25,6 +25,7 @@ const NAV_ITEMS: { tab: Tab; icon: string; label: string }[] = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("future");
+  const [swapPrefill, setSwapPrefill] = useState<{ fromSymbol: string; toSymbol: string; amount: string } | null>(null);
 
   return (
     <div className="min-h-screen bg-[#080810]">
@@ -116,8 +117,15 @@ export default function Home() {
         <div className="mt-8">
           {activeTab === "future"  ? <FutureROICalculator /> :
            activeTab === "whatif"  ? <WhatIfCalculator />    :
-           activeTab === "agent"   ? <AgentChat />           :
-           activeTab === "swap"    ? <SwapCalculator />      :
+           activeTab === "agent"   ? (
+             <AgentChat onSwapRequest={(from, to, amount) => {
+               setSwapPrefill({ fromSymbol: from, toSymbol: to, amount: String(amount) });
+               setActiveTab("swap");
+             }} />
+           ) :
+           activeTab === "swap"    ? (
+             <SwapCalculator prefill={swapPrefill} onPrefillConsumed={() => setSwapPrefill(null)} />
+           ) :
            activeTab === "dca"     ? <DCACalculator />       :
            <Profile />}
         </div>

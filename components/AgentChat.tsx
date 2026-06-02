@@ -5,10 +5,24 @@ import Image from "next/image";
 import { fetchTonPrice, fetchStakingAPY } from "@/lib/api";
 import { useTonBalance } from "@/hooks/useTonBalance";
 import { useTonAddress } from "@tonconnect/ui-react";
+import { TOKENS } from "@/lib/tokens";
+
+interface SwapQuote {
+  fromSymbol: string;
+  toSymbol: string;
+  amount: number;
+  outputAmount: string;
+  feePercent: string;
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  swapQuote?: SwapQuote;
+}
+
+interface Props {
+  onSwapRequest?: (fromSymbol: string, toSymbol: string, amount: number) => void;
 }
 
 const SUGGESTIONS = [
@@ -24,7 +38,7 @@ const glass = {
   border: "1px solid rgba(255,255,255,0.08)",
 } as const;
 
-export default function AgentChat() {
+export default function AgentChat({ onSwapRequest }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +49,10 @@ export default function AgentChat() {
   const walletAddress = useTonAddress();
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Keep a stable ref so send() doesn't need the callback in its deps
+  const onSwapRequestRef = useRef(onSwapRequest);
+  useEffect(() => { onSwapRequestRef.current = onSwapRequest; }, [onSwapRequest]);
 
   useEffect(() => {
     Promise.allSettled([fetchTonPrice(), fetchStakingAPY()]).then(([priceData, apyVal]) => {
@@ -77,7 +95,45 @@ export default function AgentChat() {
         }),
       });
       const data = await res.json();
-      setMessages([...next, { role: "assistant", content: data.message }]);
+      const raw: string = data.message ?? "";
+
+      // Parse optional swap intent emitted by DeepSeek
+      const intentMatch = raw.match(/<swap_intent>([\s\S]*?)<\/swap_intent>/);
+      const displayText = raw.replace(/<swap_intent>[\s\S]*?<\/swap_intent>\s*/g, "").trim();
+      let swapQuote: SwapQuote | undefined;
+
+      if (intentMatch) {
+        try {
+          const intent = JSON.parse(intentMatch[1]) as { fromSymbol: string; toSymbol: string; amount: number };
+          const fromTok = TOKENS.find(t => t.symbol === intent.fromSymbol);
+          const toTok   = TOKENS.find(t => t.symbol === intent.toSymbol);
+          if (fromTok && toTok && intent.amount > 0) {
+            const units = BigInt(Math.round(intent.amount * 10 ** fromTok.decimals)).toString();
+            const params = new URLSearchParams({
+              offer_address:      fromTok.contract_address,
+              ask_address:        toTok.contract_address,
+              units,
+              slippage_tolerance: "0.01",
+            });
+            const simRes = await fetch(`https://api.ston.fi/v1/swap/simulate?${params}`, { method: "POST" });
+            if (simRes.ok) {
+              const simData = await simRes.json() as { ask_units: string; fee_percent: string };
+              const outAmount = parseFloat(simData.ask_units) / 10 ** toTok.decimals;
+              swapQuote = {
+                fromSymbol:   intent.fromSymbol,
+                toSymbol:     intent.toSymbol,
+                amount:       intent.amount,
+                outputAmount: outAmount.toFixed(toTok.decimals === 6 ? 4 : 6),
+                feePercent:   (parseFloat(simData.fee_percent) * 100).toFixed(3),
+              };
+            }
+          }
+        } catch {
+          // simulate failed — show text only, no card
+        }
+      }
+
+      setMessages([...next, { role: "assistant", content: displayText, swapQuote }]);
     } catch {
       setMessages([...next, { role: "assistant", content: "Something went wrong. Please try again." }]);
     } finally {
@@ -153,25 +209,70 @@ export default function AgentChat() {
 
           {/* Messages */}
           {messages.map((msg, i) => (
-            <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              {msg.role === "assistant" && (
+            <div key={i}>
+              <div className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                {msg.role === "assistant" && (
+                  <div
+                    className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden"
+                    style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,152,234,0.3))", border: "1px solid rgba(124,58,237,0.3)" }}
+                  >
+                    <Image src="/logo.png" alt="TonSense" width={28} height={28} style={{ borderRadius: 10 }} unoptimized />
+                  </div>
+                )}
                 <div
-                  className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,152,234,0.3))", border: "1px solid rgba(124,58,237,0.3)" }}
+                  className="max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed"
+                  style={
+                    msg.role === "user"
+                      ? { background: "linear-gradient(135deg, #0098EA, #0077BB)", color: "#fff", borderBottomRightRadius: 6 }
+                      : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.9)", borderBottomLeftRadius: 6 }
+                  }
                 >
-                  <Image src="/logo.png" alt="TonSense" width={28} height={28} style={{ borderRadius: 10 }} unoptimized />
+                  {msg.content}
+                </div>
+              </div>
+
+              {/* Swap quote card — only when simulate succeeded */}
+              {msg.role === "assistant" && msg.swapQuote && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    marginLeft: 38,
+                    borderRadius: 16,
+                    padding: "14px 16px",
+                    background: "linear-gradient(135deg, rgba(0,152,234,0.08), rgba(124,58,237,0.08))",
+                    border: "1px solid rgba(0,152,234,0.25)",
+                    borderLeft: "3px solid #0098EA",
+                  }}
+                >
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
+                    {msg.swapQuote.amount} {msg.swapQuote.fromSymbol} → ~{msg.swapQuote.outputAmount} {msg.swapQuote.toSymbol}
+                  </p>
+                  <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginBottom: 12 }}>
+                    Fee {msg.swapQuote.feePercent}% · Slippage 1%
+                  </p>
+                  <button
+                    onClick={() => onSwapRequestRef.current?.(
+                      msg.swapQuote!.fromSymbol,
+                      msg.swapQuote!.toSymbol,
+                      msg.swapQuote!.amount,
+                    )}
+                    className="transition-all hover:scale-[1.02]"
+                    style={{
+                      background: "linear-gradient(135deg, #0098EA, #0077BB)",
+                      boxShadow: "0 4px 14px rgba(0,152,234,0.3)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 10,
+                      padding: "8px 16px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Swap Now →
+                  </button>
                 </div>
               )}
-              <div
-                className="max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed"
-                style={
-                  msg.role === "user"
-                    ? { background: "linear-gradient(135deg, #0098EA, #0077BB)", color: "#fff", borderBottomRightRadius: 6 }
-                    : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.9)", borderBottomLeftRadius: 6 }
-                }
-              >
-                {msg.content}
-              </div>
             </div>
           ))}
 
@@ -188,11 +289,11 @@ export default function AgentChat() {
                 className="px-4 py-3 rounded-2xl flex items-center gap-1"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderBottomLeftRadius: 6 }}
               >
-                {[0, 1, 2].map((i) => (
+                {[0, 1, 2].map((j) => (
                   <span
-                    key={i}
+                    key={j}
                     className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce"
-                    style={{ animationDelay: `${i * 150}ms` }}
+                    style={{ animationDelay: `${j * 150}ms` }}
                   />
                 ))}
               </div>

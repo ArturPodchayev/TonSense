@@ -14,7 +14,10 @@ export async function POST(req: Request) {
 
 TON DeFi analyst. Answer in ≤3 sentences. Lead with numbers when relevant. No filler, no disclaimers, no markdown. Specialties: tsTON/Tonstakers staking, Ston.fi DEX, DeDust, Jetton standard, TON Connect.
 
-Live data: TON $${tonPrice ?? "?"} (${sign}${Number(change24h ?? 0).toFixed(2)}% 24h) | APY ${apy ?? "?"}% | ${walletLine}`;
+Live data: TON $${tonPrice ?? "?"} (${sign}${Number(change24h ?? 0).toFixed(2)}% 24h) | APY ${apy ?? "?"}% | ${walletLine}
+
+Swap intent: when the user explicitly asks to swap and clearly states an amount, a source token, and a destination token, output this block as the very first thing in your response (before any text): <swap_intent>{"fromSymbol":"TON","toSymbol":"USDT","amount":10}</swap_intent>
+Valid symbols: TON, USDT, USDC, tsTON, NOT, SCALE. Only emit this tag when all three values are unambiguous.`;
 
     const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
@@ -24,7 +27,7 @@ Live data: TON $${tonPrice ?? "?"} (${sign}${Number(change24h ?? 0).toFixed(2)}%
       },
       body: JSON.stringify({
         model: "deepseek-chat",
-        max_tokens: 300,
+        max_tokens: 400,
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
