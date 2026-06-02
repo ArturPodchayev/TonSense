@@ -13,7 +13,6 @@ interface Props {
   onSwapPair?: (fromSymbol: string, toSymbol: string) => void;
 }
 
-// Module-level cache — skip fetch on re-mount within the same session
 let cache: PoolRow[] | null = null;
 
 function fmtTvl(usd: number): string {
@@ -25,27 +24,23 @@ function fmtTvl(usd: number): string {
 function fmtApy(val: unknown): string {
   const n = parseFloat(String(val ?? ""));
   if (!Number.isFinite(n) || n <= 0) return "—";
-  // API may return decimal (0.21) or percent (21) — normalise
   return n < 2 ? `${(n * 100).toFixed(1)}%` : `${n.toFixed(1)}%`;
 }
 
 export default function PoolsSection({ onSwapPair }: Props) {
   const [pools, setPools] = useState<PoolRow[] | null>(cache);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (cache !== null) return;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5_000);
+    fetch("/api/pools")
+      .then(async r => {
+        const data = await r.json() as Record<string, unknown>;
+        if (!r.ok) throw new Error(String(data.error ?? `HTTP ${r.status}`));
 
-    fetch("https://api.ston.fi/v1/pools", { signal: controller.signal })
-      .then(r => r.json())
-      .then((data: unknown) => {
-        clearTimeout(timeout);
-        const obj = data as Record<string, unknown>;
-        console.log("[PoolsSection] keys:", Object.keys(obj));
-
-        const list = (obj.pool_list ?? obj.pools ?? []) as Record<string, unknown>[];
+        console.log("[PoolsSection] keys:", Object.keys(data));
+        const list = (data.pool_list ?? data.pools ?? []) as Record<string, unknown>[];
         if (list.length > 0) console.log("[PoolsSection] first pool:", list[0]);
 
         const mapped: PoolRow[] = list
@@ -68,13 +63,20 @@ export default function PoolsSection({ onSwapPair }: Props) {
         cache = rows;
         setPools(rows);
       })
-      .catch(() => {
-        clearTimeout(timeout);
-        // Fail silently — section stays hidden
+      .catch(err => {
+        console.error("[PoolsSection] fetch failed:", err);
+        setFetchError(String(err));
       });
-
-    return () => { clearTimeout(timeout); controller.abort(); };
   }, []);
+
+  // Debug error state — visible red message
+  if (fetchError) {
+    return (
+      <div className="rounded-2xl px-4 py-4" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.06)" }}>
+        <p className="text-xs font-semibold" style={{ color: "#EF4444" }}>Pools fetch failed: {fetchError}</p>
+      </div>
+    );
+  }
 
   if (!pools || pools.length === 0) return null;
 
