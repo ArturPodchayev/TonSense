@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { TOKENS } from "@/lib/tokens";
 
-// Build a lookup: contract_address → symbol
 const ADDR_TO_SYMBOL = new Map(TOKENS.map(t => [t.contract_address, t.symbol]));
 
 interface RawPool {
@@ -37,7 +36,7 @@ function fmtApy(val: string | undefined): string {
   if (!val) return "—";
   const n = parseFloat(val);
   if (!Number.isFinite(n) || n <= 0) return "—";
-  return `${(n * 100).toFixed(1)}%`;  // API returns decimal (0.206 = 20.6%)
+  return `${(n * 100).toFixed(1)}%`;
 }
 
 const glass = {
@@ -53,6 +52,7 @@ const ROW_DIVIDER = { borderTop: "1px solid rgba(255,255,255,0.04)" } as const;
 export default function PoolsSection({ onSwapPair }: Props) {
   const [pools, setPools] = useState<PoolRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetch("https://api.ston.fi/v1/pools/query", {
@@ -62,9 +62,10 @@ export default function PoolsSection({ onSwapPair }: Props) {
     })
       .then(r => r.json())
       .then((data: unknown) => {
-        console.log("[PoolsSection] raw response:", JSON.stringify(data).slice(0, 1000));
+        console.log("[PoolsSection] raw response:", JSON.stringify(data));
         const obj = data as Record<string, unknown>;
-        const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? [])) as RawPool[];
+        const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? obj.items ?? [])) as RawPool[];
+
         const mapped: PoolRow[] = list
           .map(p => ({
             sym0:   ADDR_TO_SYMBOL.get(p.token0_address) ?? "",
@@ -85,13 +86,12 @@ export default function PoolsSection({ onSwapPair }: Props) {
         const rows = [...best.values()]
           .sort((a, b) => b.tvlUsd - a.tvlUsd)
           .slice(0, 5);
+
         setPools(rows);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
-
-  if (!loading && pools.length === 0) return null;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={glass}>
@@ -113,18 +113,20 @@ export default function PoolsSection({ onSwapPair }: Props) {
       </div>
 
       {/* Column labels */}
-      <div className="flex items-center px-4 pt-2.5 pb-1 gap-2">
-        <span className="flex-1 text-[9px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
-          Pair
-        </span>
-        <span className="text-[9px] font-semibold uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.2)", width: 72 }}>
-          TVL
-        </span>
-        <span className="text-[9px] font-semibold uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.2)", width: 64 }}>
-          APY 30d
-        </span>
-        <span style={{ width: 66 }} />
-      </div>
+      {!error && (
+        <div className="flex items-center px-4 pt-2.5 pb-1 gap-2">
+          <span className="flex-1 text-[9px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
+            Pair
+          </span>
+          <span className="text-[9px] font-semibold uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.2)", width: 72 }}>
+            TVL
+          </span>
+          <span className="text-[9px] font-semibold uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.2)", width: 64 }}>
+            APY 30d
+          </span>
+          <span style={{ width: 66 }} />
+        </div>
+      )}
 
       {/* Skeleton */}
       {loading && [0, 1, 2].map(i => (
@@ -136,8 +138,26 @@ export default function PoolsSection({ onSwapPair }: Props) {
         </div>
       ))}
 
+      {/* Error state */}
+      {error && (
+        <div className="px-4 py-5 text-center">
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+            Could not load pool data — check console for details
+          </p>
+        </div>
+      )}
+
+      {/* Empty state (fetch succeeded but no matching pools) */}
+      {!loading && !error && pools.length === 0 && (
+        <div className="px-4 py-5 text-center">
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+            No pools found — check console for raw API response
+          </p>
+        </div>
+      )}
+
       {/* Pool rows */}
-      {!loading && pools.map((pool, i) => (
+      {!loading && !error && pools.map((pool, i) => (
         <div key={i} className="flex items-center px-4 py-3 gap-2" style={ROW_DIVIDER}>
           <span className="flex-1 text-sm font-semibold text-white">
             {pool.sym0} / {pool.sym1}
