@@ -10,6 +10,7 @@ import AgentChat from "@/components/AgentChat";
 import Profile from "@/components/Profile";
 import DCACalculator from "@/components/DCACalculator";
 import SwapCalculator from "@/components/SwapCalculator";
+import PoolsSection from "@/components/PoolsSection";
 import OnboardingModal from "@/components/OnboardingModal";
 
 type Tab = "future" | "whatif" | "agent" | "swap" | "dca" | "profile";
@@ -115,7 +116,15 @@ export default function Home() {
 
         {/* Content */}
         <div className="mt-8">
-          {activeTab === "future"  ? <FutureROICalculator /> :
+          {activeTab === "future"  ? (
+             <div className="space-y-6">
+               <FutureROICalculator />
+               <PoolsSection onSwapPair={(from, to) => {
+                 setSwapPrefill({ fromSymbol: from, toSymbol: to, amount: "" });
+                 setActiveTab("swap");
+               }} />
+             </div>
+           ) :
            activeTab === "whatif"  ? <WhatIfCalculator />    :
            activeTab === "agent"   ? (
              <AgentChat onSwapRequest={(from, to, amount) => {
