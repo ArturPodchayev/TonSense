@@ -21,6 +21,9 @@ interface PoolRow {
   apy: string;
 }
 
+// Module-level cache — survives re-renders and tab switches within the session
+let cachedPools: PoolRow[] | null = null;
+
 interface Props {
   onSwapPair?: (fromSymbol: string, toSymbol: string) => void;
 }
@@ -50,48 +53,72 @@ const PULSE = { background: "rgba(255,255,255,0.07)" } as const;
 const ROW_DIVIDER = { borderTop: "1px solid rgba(255,255,255,0.04)" } as const;
 
 export default function PoolsSection({ onSwapPair }: Props) {
-  const [pools, setPools] = useState<PoolRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [pools, setPools] = useState<PoolRow[]>(cachedPools ?? []);
+  const [loading, setLoading] = useState(cachedPools === null);
   const [error, setError] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    fetch("https://api.ston.fi/v1/pools/query", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ condition: "", sort_by: "tvl_usd", sort_dir: "desc", limit: 20 }),
-    })
-      .then(r => r.json())
-      .then((data: unknown) => {
-        console.log("[PoolsSection] raw response:", JSON.stringify(data));
-        const obj = data as Record<string, unknown>;
-        const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? obj.items ?? [])) as RawPool[];
+    // Already have cached data — no fetch needed
+    if (cachedPools !== null) return;
 
-        const mapped: PoolRow[] = list
-          .map(p => ({
-            sym0:   ADDR_TO_SYMBOL.get(p.token0_address) ?? "",
-            sym1:   ADDR_TO_SYMBOL.get(p.token1_address) ?? "",
-            tvlUsd: parseFloat(p.lp_total_supply_usd),
-            apy:    fmtApy(p.apy_30d || p.apy_7d || p.apy_1d),
-          }))
-          .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 50_000);
+    // Delay fetch 2s so it doesn't contend with initial page render
+    const delay = setTimeout(() => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => {
+        controller.abort();
+        setHidden(true);  // silently hide on timeout
+        setLoading(false);
+      }, 5_000);
 
-        // Deduplicate: same pair regardless of order → keep highest TVL entry
-        const best = new Map<string, PoolRow>();
-        for (const r of mapped) {
-          const key = [r.sym0, r.sym1].sort().join("/");
-          const existing = best.get(key);
-          if (!existing || r.tvlUsd > existing.tvlUsd) best.set(key, r);
-        }
-
-        const rows = [...best.values()]
-          .sort((a, b) => b.tvlUsd - a.tvlUsd)
-          .slice(0, 5);
-
-        setPools(rows);
+      fetch("https://api.ston.fi/v1/pools/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ condition: "", sort_by: "tvl_usd", sort_dir: "desc", limit: 10 }),
+        signal: controller.signal,
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+        .then(r => r.json())
+        .then((data: unknown) => {
+          clearTimeout(timeout);
+          console.log("[PoolsSection] raw response:", JSON.stringify(data));
+          const obj = data as Record<string, unknown>;
+          const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? obj.items ?? [])) as RawPool[];
+
+          const mapped: PoolRow[] = list
+            .map(p => ({
+              sym0:   ADDR_TO_SYMBOL.get(p.token0_address) ?? "",
+              sym1:   ADDR_TO_SYMBOL.get(p.token1_address) ?? "",
+              tvlUsd: parseFloat(p.lp_total_supply_usd),
+              apy:    fmtApy(p.apy_30d || p.apy_7d || p.apy_1d),
+            }))
+            .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 50_000);
+
+          // Deduplicate: same pair regardless of order → keep highest TVL entry
+          const best = new Map<string, PoolRow>();
+          for (const r of mapped) {
+            const key = [r.sym0, r.sym1].sort().join("/");
+            const existing = best.get(key);
+            if (!existing || r.tvlUsd > existing.tvlUsd) best.set(key, r);
+          }
+
+          const rows = [...best.values()]
+            .sort((a, b) => b.tvlUsd - a.tvlUsd)
+            .slice(0, 5);
+
+          cachedPools = rows;
+          setPools(rows);
+        })
+        .catch(err => {
+          clearTimeout(timeout);
+          if ((err as Error).name !== "AbortError") setError(true);
+        })
+        .finally(() => setLoading(false));
+    }, 2_000);
+
+    return () => clearTimeout(delay);
   }, []);
+
+  if (hidden) return null;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={glass}>
