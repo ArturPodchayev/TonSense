@@ -1,14 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TOKENS } from "@/lib/tokens";
 
-interface Pool {
-  token0_symbol: string;
-  token1_symbol: string;
+// Build a lookup: contract_address → symbol
+const ADDR_TO_SYMBOL = new Map(TOKENS.map(t => [t.contract_address, t.symbol]));
+
+interface RawPool {
+  token0_address: string;
+  token1_address: string;
   lp_total_supply_usd: string;
   apy_1d: string;
   apy_7d: string;
   apy_30d: string;
+}
+
+interface PoolRow {
+  sym0: string;
+  sym1: string;
+  tvlUsd: number;
+  apy: string;
 }
 
 interface Props {
@@ -26,7 +37,7 @@ function fmtApy(val: string | undefined): string {
   if (!val) return "—";
   const n = parseFloat(val);
   if (!Number.isFinite(n) || n <= 0) return "—";
-  return `${n.toFixed(2)}%`;
+  return `${(n * 100).toFixed(1)}%`;  // API returns decimal (0.206 = 20.6%)
 }
 
 const glass = {
@@ -40,7 +51,7 @@ const PULSE = { background: "rgba(255,255,255,0.07)" } as const;
 const ROW_DIVIDER = { borderTop: "1px solid rgba(255,255,255,0.04)" } as const;
 
 export default function PoolsSection({ onSwapPair }: Props) {
-  const [pools, setPools] = useState<Pool[]>([]);
+  const [pools, setPools] = useState<PoolRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,18 +59,23 @@ export default function PoolsSection({ onSwapPair }: Props) {
       .then(r => r.json())
       .then((data: unknown) => {
         const obj = data as Record<string, unknown>;
-        const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? [])) as Pool[];
-        const filtered = list
-          .filter(p => parseFloat(p.lp_total_supply_usd) >= 10_000)
-          .sort((a, b) => parseFloat(b.lp_total_supply_usd) - parseFloat(a.lp_total_supply_usd))
-          .slice(0, 8);
-        setPools(filtered);
+        const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? [])) as RawPool[];
+        const rows: PoolRow[] = list
+          .map(p => ({
+            sym0:   ADDR_TO_SYMBOL.get(p.token0_address) ?? "",
+            sym1:   ADDR_TO_SYMBOL.get(p.token1_address) ?? "",
+            tvlUsd: parseFloat(p.lp_total_supply_usd),
+            apy:    fmtApy(p.apy_30d || p.apy_7d || p.apy_1d),
+          }))
+          .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 10_000)
+          .sort((a, b) => b.tvlUsd - a.tvlUsd)
+          .slice(0, 5);
+        setPools(rows);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  // Silent fail — render nothing if fetch completed with no usable data
   if (!loading && pools.length === 0) return null;
 
   return (
@@ -109,23 +125,23 @@ export default function PoolsSection({ onSwapPair }: Props) {
       {!loading && pools.map((pool, i) => (
         <div key={i} className="flex items-center px-4 py-3 gap-2" style={ROW_DIVIDER}>
           <span className="flex-1 text-sm font-semibold text-white">
-            {pool.token0_symbol} / {pool.token1_symbol}
+            {pool.sym0} / {pool.sym1}
           </span>
           <span
             className="text-xs font-medium text-right"
             style={{ color: "rgba(255,255,255,0.45)", width: 72 }}
           >
-            {fmtTvl(parseFloat(pool.lp_total_supply_usd))}
+            {fmtTvl(pool.tvlUsd)}
           </span>
           <span
             className="text-xs font-semibold text-right"
             style={{ color: "#22C55E", width: 64 }}
           >
-            {fmtApy(pool.apy_30d || pool.apy_7d || pool.apy_1d)}
+            {pool.apy}
           </span>
           <div style={{ width: 66, display: "flex", justifyContent: "flex-end" }}>
             <button
-              onClick={() => onSwapPair?.(pool.token0_symbol, pool.token1_symbol)}
+              onClick={() => onSwapPair?.(pool.sym0, pool.sym1)}
               className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all hover:scale-[1.04] active:scale-95"
               style={{
                 background: "rgba(0,152,234,0.1)",
