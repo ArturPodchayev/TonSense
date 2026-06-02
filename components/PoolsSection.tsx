@@ -55,9 +55,14 @@ export default function PoolsSection({ onSwapPair }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://api.ston.fi/v1/pools")
+    fetch("https://api.ston.fi/v1/pools/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ condition: "", sort_by: "tvl_usd", sort_dir: "desc", limit: 20 }),
+    })
       .then(r => r.json())
       .then((data: unknown) => {
+        console.log("[PoolsSection] raw response:", JSON.stringify(data).slice(0, 1000));
         const obj = data as Record<string, unknown>;
         const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? [])) as RawPool[];
         const mapped: PoolRow[] = list
@@ -67,7 +72,7 @@ export default function PoolsSection({ onSwapPair }: Props) {
             tvlUsd: parseFloat(p.lp_total_supply_usd),
             apy:    fmtApy(p.apy_30d || p.apy_7d || p.apy_1d),
           }))
-          .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 10_000);
+          .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 50_000);
 
         // Deduplicate: same pair regardless of order → keep highest TVL entry
         const best = new Map<string, PoolRow>();
