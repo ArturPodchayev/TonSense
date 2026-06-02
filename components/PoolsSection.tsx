@@ -40,8 +40,8 @@ export default function PoolsSection({ onSwapPair }: Props) {
         if (!r.ok) throw new Error(String(data.error ?? `HTTP ${r.status}`));
 
         console.log("[PoolsSection] keys:", Object.keys(data));
-        const list = (data.pool_list ?? data.pools ?? []) as Record<string, unknown>[];
-        if (list.length > 0) console.log("[PoolsSection] first pool:", list[0]);
+        const list = (data.pool_list ?? []) as Record<string, unknown>[];
+        console.log("[PoolsSection] first pool:", JSON.stringify((data.pool_list as Record<string, unknown>[])?.[0]));
 
         const mapped: PoolRow[] = list
           .map(p => ({
