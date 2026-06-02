@@ -60,14 +60,24 @@ export default function PoolsSection({ onSwapPair }: Props) {
       .then((data: unknown) => {
         const obj = data as Record<string, unknown>;
         const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? [])) as RawPool[];
-        const rows: PoolRow[] = list
+        const mapped: PoolRow[] = list
           .map(p => ({
             sym0:   ADDR_TO_SYMBOL.get(p.token0_address) ?? "",
             sym1:   ADDR_TO_SYMBOL.get(p.token1_address) ?? "",
             tvlUsd: parseFloat(p.lp_total_supply_usd),
             apy:    fmtApy(p.apy_30d || p.apy_7d || p.apy_1d),
           }))
-          .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 10_000)
+          .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 10_000);
+
+        // Deduplicate: same pair regardless of order → keep highest TVL entry
+        const best = new Map<string, PoolRow>();
+        for (const r of mapped) {
+          const key = [r.sym0, r.sym1].sort().join("/");
+          const existing = best.get(key);
+          if (!existing || r.tvlUsd > existing.tvlUsd) best.set(key, r);
+        }
+
+        const rows = [...best.values()]
           .sort((a, b) => b.tvlUsd - a.tvlUsd)
           .slice(0, 5);
         setPools(rows);
