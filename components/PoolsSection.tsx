@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TOKENS } from "@/lib/tokens";
+
+const ADDR_TO_SYM = new Map(TOKENS.map(t => [t.contract_address, t.symbol]));
+
+interface RawPool {
+  token0_address: string;
+  token1_address: string;
+  lp_total_supply_usd: string;
+  apy_30d: string;
+}
 
 interface PoolRow {
   sym0: string;
@@ -21,35 +31,27 @@ function fmtTvl(usd: number): string {
   return `$${usd.toFixed(0)}`;
 }
 
-function fmtApy(val: unknown): string {
-  const n = parseFloat(String(val ?? ""));
-  if (!Number.isFinite(n) || n <= 0) return "—";
-  return n < 2 ? `${(n * 100).toFixed(1)}%` : `${n.toFixed(1)}%`;
-}
-
 export default function PoolsSection({ onSwapPair }: Props) {
   const [pools, setPools] = useState<PoolRow[] | null>(cache);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (cache !== null) return;
 
     fetch("/api/pools")
       .then(async r => {
-        const data = await r.json() as Record<string, unknown>;
-        if (!r.ok) throw new Error(String(data.error ?? `HTTP ${r.status}`));
-
-        console.log("[PoolsSection] keys:", Object.keys(data));
-        const list = (data.pool_list ?? []) as Record<string, unknown>[];
-        console.log("[PoolsSection] first pool:", JSON.stringify((data.pool_list as Record<string, unknown>[])?.[0]));
+        const data = await r.json() as { pool_list?: RawPool[] };
+        const list = data.pool_list ?? [];
 
         const mapped: PoolRow[] = list
-          .map(p => ({
-            sym0:   String(p.token0_symbol ?? ""),
-            sym1:   String(p.token1_symbol ?? ""),
-            tvlUsd: parseFloat(String(p.lp_total_supply_usd ?? "0")),
-            apy:    fmtApy(p.apy_30d),
-          }))
+          .map(p => {
+            const apyRaw = parseFloat(p.apy_30d);
+            return {
+              sym0:   ADDR_TO_SYM.get(p.token0_address) ?? "",
+              sym1:   ADDR_TO_SYM.get(p.token1_address) ?? "",
+              tvlUsd: parseFloat(p.lp_total_supply_usd),
+              apy:    Number.isFinite(apyRaw) && apyRaw > 0 ? `${(apyRaw * 100).toFixed(1)}%` : "—",
+            };
+          })
           .filter(r => r.sym0 && r.sym1 && r.tvlUsd > 50_000);
 
         const best = new Map<string, PoolRow>();
@@ -63,20 +65,8 @@ export default function PoolsSection({ onSwapPair }: Props) {
         cache = rows;
         setPools(rows);
       })
-      .catch(err => {
-        console.error("[PoolsSection] fetch failed:", err);
-        setFetchError(String(err));
-      });
+      .catch(() => {});
   }, []);
-
-  // Debug error state — visible red message
-  if (fetchError) {
-    return (
-      <div className="rounded-2xl px-4 py-4" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.06)" }}>
-        <p className="text-xs font-semibold" style={{ color: "#EF4444" }}>Pools fetch failed: {fetchError}</p>
-      </div>
-    );
-  }
 
   if (!pools || pools.length === 0) return null;
 
@@ -90,7 +80,6 @@ export default function PoolsSection({ onSwapPair }: Props) {
         border: "1px solid rgba(255,255,255,0.08)",
       }}
     >
-      {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
@@ -103,7 +92,6 @@ export default function PoolsSection({ onSwapPair }: Props) {
         </span>
       </div>
 
-      {/* Rows */}
       {pools.map((pool, i) => (
         <div
           key={i}
