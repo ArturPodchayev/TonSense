@@ -1,18 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TOKENS } from "@/lib/tokens";
-
-const ADDR_TO_SYMBOL = new Map(TOKENS.map(t => [t.contract_address, t.symbol]));
-
-interface RawPool {
-  token0_address: string;
-  token1_address: string;
-  lp_total_supply_usd: string;
-  apy_1d: string;
-  apy_7d: string;
-  apy_30d: string;
-}
 
 interface PoolRow {
   sym0: string;
@@ -21,202 +9,128 @@ interface PoolRow {
   apy: string;
 }
 
-// Module-level cache — survives re-renders and tab switches within the session
-let cachedPools: PoolRow[] | null = null;
-
 interface Props {
   onSwapPair?: (fromSymbol: string, toSymbol: string) => void;
 }
 
+// Module-level cache — skip fetch on re-mount within the same session
+let cache: PoolRow[] | null = null;
+
 function fmtTvl(usd: number): string {
-  if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`;
-  if (usd >= 1_000_000)     return `$${(usd / 1_000_000).toFixed(1)}M`;
-  if (usd >= 1_000)         return `$${(usd / 1_000).toFixed(0)}K`;
+  if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(1)}M`;
+  if (usd >= 1_000)     return `$${(usd / 1_000).toFixed(0)}K`;
   return `$${usd.toFixed(0)}`;
 }
 
-function fmtApy(val: string | undefined): string {
-  if (!val) return "—";
-  const n = parseFloat(val);
+function fmtApy(val: unknown): string {
+  const n = parseFloat(String(val ?? ""));
   if (!Number.isFinite(n) || n <= 0) return "—";
-  return `${(n * 100).toFixed(1)}%`;
+  // API may return decimal (0.21) or percent (21) — normalise
+  return n < 2 ? `${(n * 100).toFixed(1)}%` : `${n.toFixed(1)}%`;
 }
 
-const glass = {
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(255,255,255,0.08)",
-} as const;
-
-const PULSE = { background: "rgba(255,255,255,0.07)" } as const;
-const ROW_DIVIDER = { borderTop: "1px solid rgba(255,255,255,0.04)" } as const;
-
 export default function PoolsSection({ onSwapPair }: Props) {
-  const [pools, setPools] = useState<PoolRow[]>(cachedPools ?? []);
-  const [loading, setLoading] = useState(cachedPools === null);
-  const [error, setError] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [pools, setPools] = useState<PoolRow[] | null>(cache);
 
   useEffect(() => {
-    // Already have cached data — no fetch needed
-    if (cachedPools !== null) return;
+    if (cache !== null) return;
 
-    // Delay fetch 2s so it doesn't contend with initial page render
-    const delay = setTimeout(() => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => {
-        controller.abort();
-        setHidden(true);  // silently hide on timeout
-        setLoading(false);
-      }, 5_000);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5_000);
 
-      fetch("https://api.ston.fi/v1/pools/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ condition: "", sort_by: "tvl_usd", sort_dir: "desc", limit: 10 }),
-        signal: controller.signal,
+    fetch("https://api.ston.fi/v1/pools", { signal: controller.signal })
+      .then(r => r.json())
+      .then((data: unknown) => {
+        clearTimeout(timeout);
+        const obj = data as Record<string, unknown>;
+        console.log("[PoolsSection] keys:", Object.keys(obj));
+
+        const list = (obj.pool_list ?? obj.pools ?? []) as Record<string, unknown>[];
+        if (list.length > 0) console.log("[PoolsSection] first pool:", list[0]);
+
+        const mapped: PoolRow[] = list
+          .map(p => ({
+            sym0:   String(p.token0_symbol ?? ""),
+            sym1:   String(p.token1_symbol ?? ""),
+            tvlUsd: parseFloat(String(p.lp_total_supply_usd ?? "0")),
+            apy:    fmtApy(p.apy_30d),
+          }))
+          .filter(r => r.sym0 && r.sym1 && r.tvlUsd > 50_000);
+
+        const best = new Map<string, PoolRow>();
+        for (const r of mapped) {
+          const key = [r.sym0, r.sym1].sort().join("/");
+          const prev = best.get(key);
+          if (!prev || r.tvlUsd > prev.tvlUsd) best.set(key, r);
+        }
+
+        const rows = [...best.values()].sort((a, b) => b.tvlUsd - a.tvlUsd).slice(0, 5);
+        cache = rows;
+        setPools(rows);
       })
-        .then(r => r.json())
-        .then((data: unknown) => {
-          clearTimeout(timeout);
-          console.log("[PoolsSection] raw response:", JSON.stringify(data));
-          const obj = data as Record<string, unknown>;
-          const list = (Array.isArray(data) ? data : (obj.pool_list ?? obj.pools ?? obj.items ?? [])) as RawPool[];
+      .catch(() => {
+        clearTimeout(timeout);
+        // Fail silently — section stays hidden
+      });
 
-          const mapped: PoolRow[] = list
-            .map(p => ({
-              sym0:   ADDR_TO_SYMBOL.get(p.token0_address) ?? "",
-              sym1:   ADDR_TO_SYMBOL.get(p.token1_address) ?? "",
-              tvlUsd: parseFloat(p.lp_total_supply_usd),
-              apy:    fmtApy(p.apy_30d || p.apy_7d || p.apy_1d),
-            }))
-            .filter(r => r.sym0 && r.sym1 && r.tvlUsd >= 50_000);
-
-          // Deduplicate: same pair regardless of order → keep highest TVL entry
-          const best = new Map<string, PoolRow>();
-          for (const r of mapped) {
-            const key = [r.sym0, r.sym1].sort().join("/");
-            const existing = best.get(key);
-            if (!existing || r.tvlUsd > existing.tvlUsd) best.set(key, r);
-          }
-
-          const rows = [...best.values()]
-            .sort((a, b) => b.tvlUsd - a.tvlUsd)
-            .slice(0, 5);
-
-          cachedPools = rows;
-          setPools(rows);
-        })
-        .catch(err => {
-          clearTimeout(timeout);
-          if ((err as Error).name !== "AbortError") setError(true);
-        })
-        .finally(() => setLoading(false));
-    }, 2_000);
-
-    return () => clearTimeout(delay);
+    return () => { clearTimeout(timeout); controller.abort(); };
   }, []);
 
-  if (hidden) return null;
+  if (!pools || pools.length === 0) return null;
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={glass}>
-
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
-        <span
-          className="text-[10px] font-semibold uppercase tracking-widest"
-          style={{ color: "rgba(255,255,255,0.4)" }}
-        >
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>
           Top STON.fi Pools
         </span>
-        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.18)" }}>
           Powered by STON.fi
         </span>
       </div>
 
-      {/* Column labels */}
-      {!error && (
-        <div className="flex items-center px-4 pt-2.5 pb-1 gap-2">
-          <span className="flex-1 text-[9px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
-            Pair
-          </span>
-          <span className="text-[9px] font-semibold uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.2)", width: 72 }}>
-            TVL
-          </span>
-          <span className="text-[9px] font-semibold uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.2)", width: 64 }}>
-            APY 30d
-          </span>
-          <span style={{ width: 66 }} />
-        </div>
-      )}
-
-      {/* Skeleton */}
-      {loading && [0, 1, 2].map(i => (
-        <div key={i} className="flex items-center px-4 py-3 gap-2" style={ROW_DIVIDER}>
-          <div className="flex-1 h-3.5 rounded-full animate-pulse" style={PULSE} />
-          <div className="h-3.5 rounded-full animate-pulse" style={{ ...PULSE, width: 72 }} />
-          <div className="h-3.5 rounded-full animate-pulse" style={{ ...PULSE, width: 64 }} />
-          <div className="h-7 rounded-lg animate-pulse" style={{ ...PULSE, width: 66 }} />
-        </div>
-      ))}
-
-      {/* Error state */}
-      {error && (
-        <div className="px-4 py-5 text-center">
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-            Could not load pool data — check console for details
-          </p>
-        </div>
-      )}
-
-      {/* Empty state (fetch succeeded but no matching pools) */}
-      {!loading && !error && pools.length === 0 && (
-        <div className="px-4 py-5 text-center">
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-            No pools found — check console for raw API response
-          </p>
-        </div>
-      )}
-
-      {/* Pool rows */}
-      {!loading && !error && pools.map((pool, i) => (
-        <div key={i} className="flex items-center px-4 py-3 gap-2" style={ROW_DIVIDER}>
+      {/* Rows */}
+      {pools.map((pool, i) => (
+        <div
+          key={i}
+          className="flex items-center px-4 py-2.5 gap-3"
+          style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.04)" : undefined }}
+        >
           <span className="flex-1 text-sm font-semibold text-white">
             {pool.sym0} / {pool.sym1}
           </span>
-          <span
-            className="text-xs font-medium text-right"
-            style={{ color: "rgba(255,255,255,0.45)", width: 72 }}
-          >
+          <span className="text-xs tabular-nums" style={{ color: "rgba(255,255,255,0.35)", minWidth: 52, textAlign: "right" }}>
             {fmtTvl(pool.tvlUsd)}
           </span>
-          <span
-            className="text-xs font-semibold text-right"
-            style={{ color: "#22C55E", width: 64 }}
-          >
+          <span className="text-xs font-semibold tabular-nums" style={{ color: "#22C55E", minWidth: 52, textAlign: "right" }}>
             {pool.apy}
           </span>
-          <div style={{ width: 66, display: "flex", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => onSwapPair?.(pool.sym0, pool.sym1)}
-              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all hover:scale-[1.04] active:scale-95"
-              style={{
-                background: "rgba(0,152,234,0.1)",
-                border: "1px solid rgba(0,152,234,0.25)",
-                color: "#0098EA",
-              }}
-            >
-              Swap →
-            </button>
-          </div>
+          <button
+            onClick={() => onSwapPair?.(pool.sym0, pool.sym1)}
+            className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all hover:scale-[1.04] active:scale-95"
+            style={{
+              background: "rgba(0,152,234,0.1)",
+              border: "1px solid rgba(0,152,234,0.22)",
+              color: "#0098EA",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Swap →
+          </button>
         </div>
       ))}
-
     </div>
   );
 }
