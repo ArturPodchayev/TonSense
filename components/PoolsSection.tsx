@@ -23,6 +23,11 @@ interface Props {
   onSwapPair?: (fromSymbol: string, toSymbol: string) => void;
 }
 
+const FALLBACK_POOLS: PoolRow[] = [
+  { sym0: "USDT", sym1: "TON", tvlUsd: 6_900_000, apy: "20.6%" },
+  { sym0: "NOT",  sym1: "TON", tvlUsd:   217_000,  apy: "23.4%" },
+];
+
 let cache: PoolRow[] | null = null;
 
 function fmtTvl(usd: number): string {
@@ -32,7 +37,7 @@ function fmtTvl(usd: number): string {
 }
 
 export default function PoolsSection({ onSwapPair }: Props) {
-  const [pools, setPools] = useState<PoolRow[] | null>(cache);
+  const [pools, setPools] = useState<PoolRow[]>(cache ?? FALLBACK_POOLS);
 
   useEffect(() => {
     if (cache !== null) return;
@@ -62,13 +67,10 @@ export default function PoolsSection({ onSwapPair }: Props) {
         }
 
         const rows = [...best.values()].sort((a, b) => b.tvlUsd - a.tvlUsd).slice(0, 5);
-        cache = rows;
-        setPools(rows);
+        if (rows.length > 0) { cache = rows; setPools(rows); }
       })
-      .catch(() => {});
+      .catch(() => {/* keep fallback */});
   }, []);
-
-  if (!pools || pools.length === 0) return null;
 
   return (
     <div
